@@ -57,7 +57,16 @@ func (h *Handler) ServeHLS(c *gin.Context) {
 	}
 	objectKey := "hls/" + assetId + "/" + rest
 
-	// --- Cookie auth ---
+	// --- Poster images are public catalog assets; no cookie required ---
+	// poster.jpg is displayed in the catalog and title detail page before any
+	// playback session is established, so it must be accessible without auth.
+	if rest == "poster.jpg" {
+		h.logger.Debug("serving public poster", zap.String("key", objectKey))
+		h.serveObject(c, objectKey)
+		return
+	}
+
+	// --- Cookie auth (HLS stream segments and manifests) ---
 	cookieValue, _ := c.Cookie("sf_play") // empty string if absent
 
 	userId, authErr := auth.VerifyCookie(h.signingSecret, cookieValue, assetId)
@@ -80,7 +89,11 @@ func (h *Handler) ServeHLS(c *gin.Context) {
 		zap.String("key", objectKey),
 	)
 
-	// --- Fetch from object storage ---
+	h.serveObject(c, objectKey)
+}
+
+// serveObject fetches an object from storage and streams it to the client.
+func (h *Handler) serveObject(c *gin.Context, objectKey string) {
 	ctx := c.Request.Context()
 	rc, size, fetchErr := h.store.GetObject(ctx, objectKey)
 	if fetchErr != nil {
@@ -97,13 +110,12 @@ func (h *Handler) ServeHLS(c *gin.Context) {
 	}
 	defer rc.Close()
 
-	// --- Stream response ---
 	contentType := contentTypeFor(objectKey)
 	c.Header("Content-Type", contentType)
 	if size > 0 {
 		c.Header("Content-Length", fmt.Sprintf("%d", size))
 	}
-	// Manifests must not be cached; segments may be cached by the CDN/browser.
+	// Manifests must not be cached; segments/images may be cached.
 	if strings.HasSuffix(objectKey, ".m3u8") {
 		c.Header("Cache-Control", "no-cache, no-store")
 	} else {
@@ -124,6 +136,12 @@ func contentTypeFor(key string) string {
 		return "video/MP2T"
 	case ".m4s", ".mp4":
 		return "video/mp4"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".webp":
+		return "image/webp"
 	default:
 		return "application/octet-stream"
 	}

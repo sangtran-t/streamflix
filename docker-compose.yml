@@ -70,6 +70,10 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_ADDR: redis:6379
       S3_ENDPOINT: http://minio:9000
+      # Pre-signed PUT URLs are sent to the browser, which can't reach the
+      # internal Docker hostname. S3_PUBLIC_ENDPOINT is the address MinIO is
+      # reachable at from the host machine (published on localhost:9000).
+      S3_PUBLIC_ENDPOINT: http://localhost:9000
       S3_KEY: ${MINIO_ROOT_USER}
       S3_SECRET: ${MINIO_ROOT_PASSWORD}
       S3_BUCKET: ${S3_BUCKET}

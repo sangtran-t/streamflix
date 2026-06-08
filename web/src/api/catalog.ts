@@ -14,6 +14,24 @@ export interface TitleSummary {
   assetStatus: AssetStatus | null;
 }
 
+export interface HomeRow {
+  title: string;
+  items: TitleSummary[];
+}
+
+export interface HomeResponse {
+  hero: TitleSummary | null;
+  rows: HomeRow[];
+}
+
+export async function getHome(accessToken?: string | null): Promise<HomeResponse> {
+  const res = await fetch('/api/v1/catalog/home', {
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  });
+  if (!res.ok) throw new Error(`Home fetch failed: ${res.status}`);
+  return res.json() as Promise<HomeResponse>;
+}
+
 export async function listTitles(): Promise<TitleSummary[]> {
   const res = await fetch('/api/v1/catalog/titles');
   if (!res.ok) throw new Error(`Catalog fetch failed: ${res.status}`);

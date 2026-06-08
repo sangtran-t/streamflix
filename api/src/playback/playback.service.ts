@@ -9,6 +9,8 @@ import { SigningService } from './signing.service';
 export interface PlaybackUrlResponse {
   masterUrl: string;
   expiresAt: string; // ISO-8601
+  titleId: string;
+  titleSlug: string;
 }
 
 @Injectable()
@@ -29,7 +31,10 @@ export class PlaybackService {
     userId: string,
     assetId: string,
   ): Promise<{ cookieValue: string; cookiePath: string; response: PlaybackUrlResponse }> {
-    const asset = await this.assets.findOne({ where: { id: assetId } });
+    const asset = await this.assets.findOne({
+      where: { id: assetId },
+      relations: ['title'],
+    });
     if (!asset) throw new NotFoundException(`Asset not found: ${assetId}`);
     if (asset.status !== AssetStatus.Ready) {
       throw new UnprocessableEntityException(
@@ -47,6 +52,8 @@ export class PlaybackService {
       response: {
         masterUrl,
         expiresAt: expiresAt.toISOString(),
+        titleId: asset.titleId,
+        titleSlug: asset.title?.slug ?? '',
       },
     };
   }

@@ -8,6 +8,8 @@ import {
 } from 'typeorm';
 import { WatchProgress } from './watch-progress.entity';
 
+export type UserRole = 'user' | 'admin';
+
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -24,6 +26,11 @@ export class User {
 
   @Column({ name: 'display_name', type: 'text' })
   displayName!: string;
+
+  /** Access level. All newly registered users default to 'user'.
+   *  Promote to 'admin' with: UPDATE "user" SET role = 'admin' WHERE email = '...'; */
+  @Column({ type: 'text', default: 'user' })
+  role!: UserRole;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

@@ -1,60 +1,135 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getPlaybackUrl } from '../api/playback.ts';
+import { getProgress, saveProgress } from '../api/progress.ts';
 import Player from '../components/Player.tsx';
 import { useAuth } from '../hooks/useAuth.ts';
+
+const SAVE_INTERVAL_S = 10;
 
 export default function Watch() {
   const { assetId } = useParams<{ assetId: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, initialized, accessToken } = useAuth();
 
   const [masterUrl, setMasterUrl] = useState<string | null>(null);
+  const [titleId, setTitleId] = useState<string | null>(null);
+  const [titleSlug, setTitleSlug] = useState<string | null>(null);
+  const [titleName, setTitleName] = useState<string | undefined>(undefined);
+  const [initialTime, setInitialTime] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const lastSavedRef = useRef<number>(0);
+  const currentTimeRef = useRef<number>(0);
+
   useEffect(() => {
+    // Wait for session restore before redirecting — prevents flash on refresh.
+    if (!initialized) return;
     if (!isAuthenticated || !accessToken) {
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
       return;
     }
     if (!assetId) return;
 
-    getPlaybackUrl(assetId, accessToken)
-      .then((data) => setMasterUrl(data.masterUrl))
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed to load playback URL'),
-      )
-      .finally(() => setLoading(false));
-  }, [assetId, accessToken, isAuthenticated, navigate]);
+    const load = async () => {
+      try {
+        const data = await getPlaybackUrl(assetId, accessToken);
+        setMasterUrl(data.masterUrl);
+        setTitleId(data.titleId);
+        setTitleSlug(data.titleSlug);
+        // API doesn't expose titleName — use slug as display fallback
+        setTitleName(data.titleSlug ?? undefined);
+
+        if (data.titleId) {
+          const progress = await getProgress(accessToken);
+          const saved = progress.find((p) => p.titleId === data.titleId);
+          if (saved && !saved.completed && saved.positionSeconds > 5) {
+            setInitialTime(saved.positionSeconds);
+          }
+        }
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to load playback URL');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, [assetId, accessToken, isAuthenticated, initialized, navigate]);
+
+  const handleTimeUpdate = useCallback(
+    (currentTime: number) => {
+      currentTimeRef.current = currentTime;
+      if (titleId && accessToken && currentTime - lastSavedRef.current >= SAVE_INTERVAL_S) {
+        lastSavedRef.current = currentTime;
+        void saveProgress(titleId, currentTime, accessToken);
+      }
+    },
+    [titleId, accessToken],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (titleId && accessToken && currentTimeRef.current > 5) {
+        void saveProgress(titleId, currentTimeRef.current, accessToken);
+      }
+    };
+  }, [titleId, accessToken]);
+
+  const handleBack = () => {
+    if (titleSlug) void navigate(`/title/${titleSlug}`);
+    else void navigate('/');
+  };
+
+  // Re-issues the sf_play signed cookie when hls.js reports a fatal 401/403.
+  // After this resolves, Player calls hls.startLoad() to resume playback.
+  const handleRefreshPlayback = useCallback(async () => {
+    if (!assetId || !accessToken) throw new Error('No credentials');
+    await getPlaybackUrl(assetId, accessToken);
+    // Side effect: server sets a fresh sf_play cookie; no return value needed.
+  }, [assetId, accessToken]);
+
+  // Loading state — keep it minimal (player will show soon)
+  if (loading) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', display: 'grid', placeItems: 'center', fontFamily: 'var(--sans)' }}>
+        <span style={{
+          width: 48, height: 48, borderRadius: 99,
+          border: '3px solid rgba(255,255,255,0.15)',
+          borderTopColor: 'var(--accent)',
+          animation: 'spin 1s linear infinite',
+        }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
+
+  if (error || !masterUrl) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', display: 'grid', placeItems: 'center', fontFamily: 'var(--sans)', color: '#f7f6f3' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 24, fontSize: 15 }}>{error ?? 'Playback unavailable'}</p>
+          <button onClick={handleBack} style={{
+            padding: '10px 24px', borderRadius: 999,
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#f7f6f3', fontSize: 14, fontWeight: 600,
+            background: 'none', cursor: 'pointer', fontFamily: 'var(--sans)',
+          }}>
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black text-slate-100">
-      {/* Minimal nav */}
-      <header className="px-6 py-4 flex items-center gap-4">
-        <Link to="/" className="text-red-500 font-bold text-lg">StreamFlix</Link>
-        <span className="text-slate-600">›</span>
-        <span className="text-slate-400 text-sm">Now playing</span>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 pb-12">
-        {loading && (
-          <div className="aspect-video bg-slate-900 rounded-lg animate-pulse flex items-center justify-center">
-            <span className="text-slate-500 text-sm">Loading…</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center">
-            <div className="text-center space-y-2">
-              <p className="text-red-400 text-sm">{error}</p>
-              <Link to="/" className="text-slate-400 text-sm underline">Back to browse</Link>
-            </div>
-          </div>
-        )}
-
-        {masterUrl && <Player masterUrl={masterUrl} />}
-      </main>
-    </div>
+    <Player
+      masterUrl={masterUrl}
+      titleName={titleName}
+      initialTime={initialTime}
+      onTimeUpdate={handleTimeUpdate}
+      onBack={handleBack}
+      refreshPlayback={handleRefreshPlayback}
+    />
   );
 }

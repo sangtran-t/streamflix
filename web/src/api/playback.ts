@@ -1,6 +1,8 @@
 export interface PlaybackUrlResponse {
   masterUrl: string;
   expiresAt: string;
+  titleId: string;
+  titleSlug: string;
 }
 
 /**

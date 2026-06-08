@@ -6,7 +6,18 @@ COPY internal ./internal
 COPY cmd ./cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/worker ./cmd/worker
 
-FROM gcr.io/distroless/static-debian12:nonroot
+# Runtime: Debian slim + ffmpeg (required for transcoding and ffprobe).
+FROM debian:bookworm-slim
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ffmpeg \
+      ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Run as non-root.
+RUN useradd -r -u 1001 -g root worker
+USER worker
+
 COPY --from=build /out/worker /worker
 ENV HEALTH_PORT=8090
 EXPOSE 8090
