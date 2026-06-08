@@ -1,0 +1,5 @@
+packages:
+  - "api"
+  - "web"
+# Note: the Go services in `transcoder/` are a separate Go module, not a pnpm
+# workspace member. They are built with the Go toolchain and CI's `go` job.

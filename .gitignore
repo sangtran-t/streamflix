@@ -1,0 +1,39 @@
+# --- Secrets & local config ---
+.env
+.env.*
+!.env.example
+infra/.env
+
+# --- Node / pnpm ---
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+
+# --- Go ---
+transcoder/bin/
+*.test
+*.out
+
+# --- Web / Vite ---
+web/dist/
+web/.vite/
+
+# --- Media (large blobs; never in git — see docs/PLAN.md §12) ---
+media/
+infra/seed/clips/*
+!infra/seed/clips/.gitkeep
+!infra/seed/clips/README.md
+
+# --- Editor / OS ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+coverage/
+
+# --- Docs ---
+docs/

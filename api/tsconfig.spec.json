@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Jest globals (describe, it, expect, ...) come from @types/jest.
+    "types": ["jest", "node"],
+    // Tests intentionally have unused params in stubs and mock callbacks.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  // Override: include spec files (excluded from the main tsconfig).
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

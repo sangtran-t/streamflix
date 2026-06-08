@@ -1,0 +1,24 @@
+# build artifacts
+dist/
+**/dist/
+coverage/
+**/coverage/
+node_modules/
+
+# lockfiles & generated
+pnpm-lock.yaml
+*.lock
+
+# Go service (formatted by gofmt, not prettier)
+transcoder/
+
+# media / binary assets
+media/
+*.mp4
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.ico
+*.woff
+*.woff2

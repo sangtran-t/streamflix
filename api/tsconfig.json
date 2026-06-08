@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    // moduleResolution is intentionally omitted: TypeScript infers "node10" from
+    // module:"commonjs", which is correct for NestJS. Setting it explicitly triggers
+    // a TS-6.0 deprecation warning even though the behaviour is identical.
+    "rootDir": "./src",
+    // Must be false: target>=ES2022 defaults this to true, which breaks NestJS DI
+    // and TypeORM decorator metadata (experimentalDecorators + emitDecoratorMetadata
+    // assume legacy class-field assignment semantics).
+    "useDefineForClassFields": false,
+    "declaration": false,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Include Jest globals so the IDE resolves describe/it/expect in *.spec.ts files.
+    // @types/jest is dev-only and has no runtime footprint.
+    "types": ["jest", "node"],
+  },
+  "include": ["src/**/*"],
+  // node_modules and dist are always excluded; spec files are included here so
+  // the IDE (VSCode / TS Language Server) can resolve Jest globals via the
+  // "types": ["jest", "node"] entry above. The production build uses
+  // tsconfig.build.json which still excludes spec files.
+  "exclude": ["node_modules", "dist"]
+}

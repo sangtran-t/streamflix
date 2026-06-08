@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: api (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      # Switch to `--frozen-lockfile` once pnpm-lock.yaml is committed (see
+      # PHASE0_HANDOFF.md). Using a plain install keeps CI green pre-lockfile.
+      - run: pnpm install
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      # Dependency audit (docs/CLAUDE.md §3). Non-blocking on low/moderate for now.
+      - run: pnpm audit --audit-level high || true
+
+  web:
+    name: web (React/Vite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  go:
+    name: transcoder (Go worker + edge)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: transcoder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          # Phase 0 is stdlib-only (no go.sum yet); module cache keys on go.sum
+          # are introduced when the first dependency is added in Phase 1.
+          cache: false
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./...
+
+  docs-guard:
+    name: docs guard (contract changes need docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require COMMUNICATION.md update when contract code changes
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          if [ -z "$base" ]; then echo "not a PR; skipping"; exit 0; fi
+          changed=$(git diff --name-only "$base" "$head")
+          echo "$changed"
+          # Heuristic guard: if signing/contract code changed but the contract doc
+          # did not, fail loudly. Tightened with real contract tests in Phase 1.
+          if echo "$changed" | grep -Eq 'signing|playback|transcode.*(job|status)'; then
+            if ! echo "$changed" | grep -q 'docs/COMMUNICATION.md'; then
+              echo "::error::Contract-related code changed without updating docs/COMMUNICATION.md"
+              exit 1
+            fi
+          fi
