@@ -23,6 +23,7 @@ web/dist/
 web/.vite/
 
 # --- Media (large blobs; never in git — see docs/PLAN.md §12) ---
+.seed-tmp/
 media/
 infra/seed/clips/*
 !infra/seed/clips/.gitkeep

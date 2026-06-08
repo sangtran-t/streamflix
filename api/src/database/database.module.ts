@@ -7,6 +7,7 @@ import { dataSourceOptions } from './data-source';
     TypeOrmModule.forRoot({
       ...dataSourceOptions,
       autoLoadEntities: true,
+      migrationsRun: true, // run pending migrations on every app start
     }),
   ],
 })

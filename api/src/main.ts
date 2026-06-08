@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
@@ -9,6 +9,11 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.useLogger(new StructuredLogger());
+
+  // URI versioning: /v1/auth/..., /v1/catalog/..., /v1/playback/...
+  // Operational endpoints (healthz, readyz) are marked VERSION_NEUTRAL
+  // and remain unversioned.
+  app.enableVersioning({ type: VersioningType.URI });
 
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),

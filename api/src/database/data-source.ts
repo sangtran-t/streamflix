@@ -8,6 +8,7 @@ import { Title } from './entities/title.entity';
 import { User } from './entities/user.entity';
 import { WatchProgress } from './entities/watch-progress.entity';
 import { InitSchema1749340800000 } from './migrations/1749340800000-InitSchema';
+import { SeedPhase11749340800001 } from './migrations/1749340800001-SeedPhase1';
 
 // When invoked via the TypeORM CLI, dotenv is not loaded by NestJS yet.
 // SetDefault skips variables already present in the environment.
@@ -24,7 +25,7 @@ export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL,
   entities: [User, Title, Genre, Asset, WatchProgress],
-  migrations: [InitSchema1749340800000],
+  migrations: [InitSchema1749340800000, SeedPhase11749340800001],
   synchronize: false,
   logging: ['error', 'warn'],
 };

@@ -1,8 +1,8 @@
-import { Controller, Get, HttpCode, Res } from '@nestjs/common';
+import { Controller, Get, HttpCode, Res, VERSION_NEUTRAL } from '@nestjs/common';
 import type { Response } from 'express';
 import { HealthService } from './health.service';
 
-@Controller()
+@Controller({ version: VERSION_NEUTRAL })
 export class HealthController {
   constructor(private readonly health: HealthService) {}
 

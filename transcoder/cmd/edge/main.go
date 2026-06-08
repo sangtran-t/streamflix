@@ -13,15 +13,27 @@ import (
 
 	"streamflix/transcoder/internal/config"
 	"streamflix/transcoder/internal/health"
+	"streamflix/transcoder/internal/hls"
 	applog "streamflix/transcoder/internal/log"
 	"streamflix/transcoder/internal/middleware"
 	"streamflix/transcoder/internal/probe"
+	"streamflix/transcoder/internal/storage"
 )
 
 func main() {
 	cfg := config.LoadEdge()
 	logger := applog.New(cfg.ServiceName)
 	defer logger.Sync() //nolint:errcheck
+
+	// S3/MinIO client — edge fetches HLS objects on behalf of verified players.
+	// useSSL=false for local MinIO dev (http://); cloud endpoints use https://.
+	useSSL := false
+	store, err := storage.New(cfg.S3Endpoint, cfg.S3Key, cfg.S3Secret, cfg.S3Bucket, useSSL)
+	if err != nil {
+		logger.Fatal("failed to init storage client", zap.Error(err))
+	}
+
+	hlsHandler := hls.New(store, cfg.SigningSecret, logger)
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -38,9 +50,7 @@ func main() {
 		}},
 	)
 
-	r.GET("/hls/*path", func(c *gin.Context) {
-		c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
-	})
+	r.GET("/hls/*path", hlsHandler.ServeHLS)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
