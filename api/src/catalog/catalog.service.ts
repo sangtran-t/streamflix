@@ -62,7 +62,6 @@ export class CatalogService {
    * optional Continue Watching row + Trending + New Arrivals rows.
    */
   async getHome(userId?: string): Promise<HomeResponse> {
-    // Fetch all titles ordered by popularity desc, created desc.
     const all = await this.titles.find({
       relations: ['genres', 'assets'],
       order: { popularity: 'DESC', createdAt: 'DESC' },
@@ -96,12 +95,10 @@ export class CatalogService {
       }
     }
 
-    // Trending — by popularity.
     if (ready.length > 0) {
       rows.push({ title: 'Trending Now', items: ready.slice(0, 20) });
     }
 
-    // New Arrivals — most recently created ready titles.
     const newArrivals = summaries
       .filter((t) => t.assetStatus === AssetStatus.Ready)
       .reverse()
@@ -110,7 +107,6 @@ export class CatalogService {
       rows.push({ title: 'New Arrivals', items: newArrivals });
     }
 
-    // Genre rows — collect unique genres from ready titles.
     const genreMap = new Map<string, TitleSummary[]>();
     for (const t of ready) {
       for (const g of t.genres) {
@@ -129,8 +125,7 @@ export class CatalogService {
 
   private toSummary(title: Title): TitleSummary {
     const asset: Asset | undefined =
-      title.assets?.find((a) => a.status === AssetStatus.Ready) ??
-      title.assets?.[0];
+      title.assets?.find((a) => a.status === AssetStatus.Ready) ?? title.assets?.[0];
 
     return {
       id: title.id,

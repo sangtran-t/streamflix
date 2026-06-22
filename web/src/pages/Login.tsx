@@ -6,7 +6,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { login, register, isAuthenticated, initialized } = useAuth();
 
-  // Redirect already-authenticated users away immediately.
   useEffect(() => {
     if (initialized && isAuthenticated) {
       void navigate('/', { replace: true });
@@ -49,15 +48,16 @@ export default function Login() {
         fontFamily: 'var(--sans)',
       }}
     >
-      {/* Background grain */}
       <div className="grain" aria-hidden="true" />
 
-      {/* Ambient glow */}
       <div
         aria-hidden="true"
         style={{
-          position: 'fixed', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(60% 60% at 50% 40%, rgba(227,189,118,0.06) 0%, transparent 70%)',
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'radial-gradient(60% 60% at 50% 40%, rgba(227,189,118,0.06) 0%, transparent 70%)',
         }}
       />
 
@@ -76,7 +76,6 @@ export default function Login() {
           boxShadow: '0 32px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)',
         }}
       >
-        {/* Wordmark */}
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
           <span
             style={{
@@ -91,7 +90,6 @@ export default function Login() {
           </span>
         </div>
 
-        {/* Mode toggle */}
         <div
           style={{
             display: 'grid',
@@ -110,7 +108,10 @@ export default function Login() {
               <button
                 key={m}
                 type="button"
-                onClick={() => { setMode(m); setError(null); }}
+                onClick={() => {
+                  setMode(m);
+                  setError(null);
+                }}
                 style={{
                   padding: '9px 0',
                   borderRadius: 9,
@@ -131,14 +132,24 @@ export default function Login() {
           })}
         </div>
 
-        {/* Form */}
         <form
-          onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSubmit();
+          }}
           style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
         >
           {mode === 'register' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-faint)',
+                }}
+              >
                 Display name
               </span>
               <input
@@ -154,7 +165,15 @@ export default function Login() {
           )}
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--text-faint)',
+              }}
+            >
               Email
             </span>
             <input
@@ -169,7 +188,15 @@ export default function Login() {
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--text-faint)',
+              }}
+            >
               Password
             </span>
             <input
@@ -203,34 +230,21 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
+            className="btn btn--play"
             style={{
               marginTop: 8,
               height: 48,
+              width: '100%',
+              justifyContent: 'center',
               borderRadius: 12,
-              background: loading
-                ? 'rgba(227,189,118,0.5)'
-                : 'var(--accent)',
-              color: '#16171b',
-              fontFamily: 'var(--sans)',
-              fontWeight: 700,
-              fontSize: 14.5,
-              letterSpacing: '-0.01em',
-              border: 'none',
+              opacity: loading ? 0.6 : 1,
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'background .3s var(--ease), transform .2s',
             }}
-            onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#edd08c'; }}
-            onMouseLeave={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--accent)'; }}
           >
-            {loading
-              ? 'Please wait…'
-              : mode === 'login'
-                ? 'Sign in'
-                : 'Create account'}
+            {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
-        {/* Toggle hint */}
         <p
           style={{
             marginTop: 24,
@@ -242,7 +256,10 @@ export default function Login() {
           {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <button
             type="button"
-            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); }}
+            onClick={() => {
+              setMode(mode === 'login' ? 'register' : 'login');
+              setError(null);
+            }}
             style={{
               color: 'var(--accent)',
               fontWeight: 600,

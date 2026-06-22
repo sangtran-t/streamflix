@@ -19,7 +19,6 @@ export interface PresignedPut {
 export class StorageService implements OnModuleInit {
   private readonly logger = new Logger(StorageService.name);
 
-  /** Used for server-side API calls (HeadObject, PutBucketCors, etc.). */
   private readonly s3: S3Client;
 
   /**
@@ -44,8 +43,18 @@ export class StorageService implements OnModuleInit {
       secretAccessKey: process.env.S3_SECRET ?? 'minioadmin',
     };
 
-    this.s3 = new S3Client({ endpoint: internalEndpoint, region, credentials, forcePathStyle: true });
-    this.presignS3 = new S3Client({ endpoint: publicEndpoint, region, credentials, forcePathStyle: true });
+    this.s3 = new S3Client({
+      endpoint: internalEndpoint,
+      region,
+      credentials,
+      forcePathStyle: true,
+    });
+    this.presignS3 = new S3Client({
+      endpoint: publicEndpoint,
+      region,
+      credentials,
+      forcePathStyle: true,
+    });
 
     this.logger.log(
       `Storage ready — internal: ${internalEndpoint}, public: ${publicEndpoint}, bucket: ${this.bucket}`,
@@ -83,10 +92,6 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  /**
-   * Generate a pre-signed PUT URL the browser can use to upload directly to
-   * MinIO, bypassing the API server (ADR-0008).
-   */
   async getPresignedPutUrl(
     key: string,
     contentType: string,
@@ -102,16 +107,11 @@ export class StorageService implements OnModuleInit {
     return { url, expiresAt };
   }
 
-  /**
-   * HEAD an object to confirm it exists and is non-empty.
-   * Uses the internal client — runs server-side only.
-   */
   async headObject(key: string): Promise<HeadObjectCommandOutput> {
     const cmd = new HeadObjectCommand({ Bucket: this.bucket, Key: key });
     return this.s3.send(cmd);
   }
 
-  /** Returns the object-key for raw uploads. */
   rawKey(assetId: string, ext: string): string {
     return `raw/${assetId}/source.${ext}`;
   }

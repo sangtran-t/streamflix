@@ -9,16 +9,9 @@ import {
 interface AuthState {
   accessToken: string | null;
   user: { id: string; email: string; displayName: string; role: 'user' | 'admin' } | null;
-  /**
-   * True once the first refresh attempt has fully resolved (success or failure).
-   * Used to distinguish "not yet checked" from "definitely logged out".
-   */
   initialized: boolean;
 }
 
-// In-memory auth state — never persisted to localStorage/sessionStorage.
-// The httpOnly sf_refresh cookie (set by the API) is used to restore the
-// session silently on page reload via refreshTokens().
 let _state: AuthState = { accessToken: null, user: null, initialized: false };
 const _listeners = new Set<() => void>();
 
@@ -65,12 +58,8 @@ export function useAuth() {
     return () => _listeners.delete(fn);
   }, []);
 
-  // Subscribe on mount, unsubscribe on unmount.
   useState(() => {
-    // Store cleanup but don't expose it as state — just need the side effect.
     const unsub = subscribe();
-    // React will not call this as a cleanup, so we rely on component tree stability.
-    // Components at the root (AppShell, Nav) live for the whole session.
     return unsub;
   });
 
@@ -94,7 +83,6 @@ export function useAuth() {
     notify();
   }, []);
 
-  // Admin is determined by the role field returned from the API on login/refresh.
   const isAdmin = _state.user?.role === 'admin';
 
   return {

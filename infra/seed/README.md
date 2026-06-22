@@ -5,6 +5,7 @@ Seeding has two halves: **catalog metadata** (rows in Postgres) and **media byte
 deterministically without depending on large media downloads.
 
 ## 1. Catalog metadata — `api/src/database/seed.ts`
+
 Idempotent upserts of genres, CC-BY titles, and their assets via TypeORM
 (ADR-0009). Re-running never duplicates rows (every row has a fixed id;
 `repository.save()` upserts by PK). Run it after migrating:
@@ -20,6 +21,7 @@ needed. Other titles are seeded as `queued` (their bytes get transcoded on deman
 via the Phase-2 upload flow).
 
 ## 2. Media bytes — clips in `infra/seed/clips/`
+
 Large media is **never committed to git** (see `.gitignore`, docs/PLAN.md §12).
 Instead:
 
@@ -32,6 +34,7 @@ All titles, authors, licenses, and source URLs are recorded in `CREDITS.md`
 (CC-BY requires visible attribution).
 
 ### Why not download inside the seed script?
+
 Network downloads inside a seed are flaky and may be blocked in CI/containers
 (review C3). Keeping the download as an explicit, checksummed, resumable step that
 writes into MinIO avoids coupling DB seeding to network availability.

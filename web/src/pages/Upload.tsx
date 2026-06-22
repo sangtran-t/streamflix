@@ -1,138 +1,127 @@
-import { useEffect, useRef, useState } from 'react';
+/**
+ * Upload Dashboard
+ *
+ * Two-panel layout:
+ *   Left  — Add new upload form (title, synopsis, year, file drag-drop)
+ *   Right — Live queue showing all uploads with phase-aware progress
+ *
+ * Uploads run in the background via UploadQueueContext.
+ * User can navigate away and return to check status.
+ */
+
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  completeUpload,
-  getUploadStatus,
-  initUpload,
-  putFileToStorage,
-  type AssetStatus,
-} from '../api/upload';
+import { useUploadQueue } from '../hooks/useUploadQueue';
 import { Icon } from '../components/ui/Icon.tsx';
+import { UploadQueueItem } from '../components/ui/UploadQueueItem.tsx';
+import { UploadModal } from '../components/ui/UploadModal.tsx';
 import { useAuth } from '../hooks/useAuth';
 
-type Step = 'form' | 'uploading' | 'processing' | 'done' | 'error';
+type FilterType = 'all' | 'active' | 'done' | 'error';
 
-interface FormState {
-  name: string;
-  synopsis: string;
-  year: string;
-  file: File | null;
+function EmptyQueue({ onAddClick }: { onAddClick: () => void }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '80px 24px',
+        textAlign: 'center',
+        gap: 16,
+      }}
+    >
+      <div
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 24,
+          background: 'var(--accent-soft)',
+          border: '1px solid var(--accent-line)',
+          display: 'grid',
+          placeItems: 'center',
+          color: 'var(--accent)',
+          marginBottom: 8,
+          boxShadow: '0 12px 32px rgba(227, 189, 118, 0.15)',
+        }}
+      >
+        <Icon name="upload" size={32} stroke={1.5} />
+      </div>
+      <p
+        style={{
+          fontFamily: 'var(--display)',
+          fontWeight: 700,
+          fontSize: 22,
+          letterSpacing: '-0.02em',
+          color: 'var(--text)',
+        }}
+      >
+        Your queue is empty
+      </p>
+      <p style={{ fontSize: 14, color: 'var(--text-faint)', lineHeight: 1.5, maxWidth: 280 }}>
+        Ready to stream? Add a new video file to start the transcoding process.
+      </p>
+      
+      <button
+        onClick={onAddClick}
+        className="btn btn--play"
+        style={{
+          marginTop: 12,
+          height: 48,
+          padding: '0 32px',
+          borderRadius: 12,
+          fontSize: 15,
+          gap: 10,
+        }}
+      >
+        <Icon name="plus" size={16} stroke={2} />
+        Upload Video
+      </button>
+    </div>
+  );
 }
-
-const CURRENT_YEAR = new Date().getFullYear();
-
-const fieldLabel: React.CSSProperties = {
-  fontSize: 11.5,
-  fontWeight: 600,
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase',
-  color: 'var(--text-faint)',
-  marginBottom: 7,
-  display: 'block',
-};
-
-const inputStyle: React.CSSProperties = {
-  height: 46,
-  padding: '0 16px',
-  borderRadius: 10,
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid var(--hairline)',
-  color: 'var(--text)',
-  fontFamily: 'var(--sans)',
-  fontSize: 14.5,
-  outline: 'none',
-  width: '100%',
-  transition: 'border-color .25s, box-shadow .25s',
-};
-
-const statusLabel: Record<AssetStatus, string> = {
-  queued:     'Queued — waiting for a worker…',
-  processing: 'Transcoding — building HLS renditions…',
-  ready:      'Ready',
-  failed:     'Failed',
-};
 
 export default function Upload() {
   const { isAuthenticated, isAdmin, initialized, accessToken } = useAuth();
   const navigate = useNavigate();
+  const { items, remove, retry, resumePolling } = useUploadQueue();
 
-  const [step, setStep]           = useState<Step>('form');
-  const [form, setForm]           = useState<FormState>({ name: '', synopsis: '', year: String(CURRENT_YEAR), file: null });
-  const [uploadPct, setUploadPct] = useState(0);
-  const [status, setStatus]       = useState<AssetStatus | null>(null);
-  const [readyAssetId, setReadyAssetId] = useState<string | null>(null);
-  const [error, setError]         = useState<string | null>(null);
-  const [dragOver, setDragOver]   = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<FilterType>('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Wait for session restore, then enforce admin-only access.
+  // ── Auth guard & polling resume ───────────────────────────────────────────
   useEffect(() => {
     if (!initialized) return;
-    if (!isAuthenticated) { void navigate('/login', { replace: true }); return; }
-    if (!isAdmin) { void navigate('/', { replace: true }); }
-  }, [initialized, isAuthenticated, isAdmin, navigate]);
+    if (!isAuthenticated) void navigate('/login', { replace: true });
+    else if (!isAdmin) void navigate('/', { replace: true });
+    else if (accessToken) resumePolling(accessToken);
+  }, [initialized, isAuthenticated, isAdmin, navigate, accessToken, resumePolling]);
 
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+  // Derive stats
+  const activeCount = items.filter(
+    (it) => it.phase === 'uploading' || it.phase === 'processing',
+  ).length;
 
-  const setFile = (file: File | null) => setForm((f) => ({ ...f, file }));
+  // Filtering & Pagination
+  const filteredItems = useMemo(() => {
+    if (statusFilter === 'all') return items;
+    if (statusFilter === 'active') return items.filter((it) => it.phase === 'uploading' || it.phase === 'processing');
+    return items.filter((it) => it.phase === statusFilter);
+  }, [items, statusFilter]);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith('video/')) setFile(file);
-  };
+  const PAGE_SIZE = 10;
+  const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE);
+  
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredItems.slice(start, start + PAGE_SIZE);
+  }, [filteredItems, currentPage]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.file || !accessToken) return;
-
-    setError(null);
-    setStep('uploading');
-    setUploadPct(0);
-
-    try {
-      const init = await initUpload(
-        {
-          name:        form.name.trim(),
-          synopsis:    form.synopsis.trim(),
-          year:        parseInt(form.year, 10),
-          filename:    form.file.name,
-          contentType: form.file.type || 'video/mp4',
-        },
-        accessToken,
-      );
-
-      await putFileToStorage(init.putUrl, form.file, (frac) => {
-        setUploadPct(Math.round(frac * 100));
-      });
-
-      await completeUpload(init.assetId, accessToken);
-
-      setStep('processing');
-      setStatus('queued');
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const s = await getUploadStatus(init.assetId, accessToken);
-          setStatus(s.status);
-          if (s.status === 'ready') {
-            clearInterval(pollRef.current!);
-            setReadyAssetId(init.assetId);
-            setStep('done');
-          } else if (s.status === 'failed') {
-            clearInterval(pollRef.current!);
-            setError('Transcoding failed. Check worker logs for details.');
-            setStep('error');
-          }
-        } catch { /* transient poll error — keep trying */ }
-      }, 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStep('error');
-    }
+  const handleFilterChange = (filter: FilterType) => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
   };
 
   return (
@@ -142,274 +131,288 @@ export default function Upload() {
       <div
         className="screen-anim"
         style={{
-          padding: 'clamp(48px,7vh,80px) var(--page-x) clamp(80px,12vh,140px)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          padding: 'clamp(40px,6vh,72px) var(--page-x) clamp(64px,10vh,120px)',
+          maxWidth: 1024,
+          margin: '0 auto',
         }}
       >
-        {/* Header */}
-        <div style={{ width: '100%', maxWidth: 560, marginBottom: 40 }}>
-          <p className="kicker" style={{ marginBottom: 16 }}>
-            <Link to="/" style={{ color: 'inherit', opacity: 0.7 }}>Home</Link>
+        {/* ── Page header ──────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 36 }}>
+          <p className="kicker" style={{ marginBottom: 14 }}>
+            <Link to="/" style={{ color: 'inherit', opacity: 0.7 }}>
+              Home
+            </Link>
             <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
             Upload
           </p>
-          <h1 className="display display--xl" style={{ fontSize: 'clamp(32px,5vw,64px)', textTransform: 'uppercase' }}>
-            Add a title
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+            <div style={{ flex: 1, minWidth: 300 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <h1
+                  className="display display--xl"
+                  style={{ fontSize: 'clamp(28px,4vw,42px)', textTransform: 'uppercase', lineHeight: 1 }}
+                >
+                  Upload Dashboard
+                </h1>
+                {activeCount > 0 && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '5px 14px',
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: 'var(--accent)',
+                      background: 'var(--accent-soft)',
+                      border: '1px solid var(--accent-line)',
+                      animation: 'pulse-badge 2s ease-in-out infinite',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: 'var(--accent)',
+                        animation: 'pulse-dot 1.4s ease-in-out infinite',
+                      }}
+                    />
+                    {activeCount} in progress
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 14, color: 'var(--text-faint)', marginTop: 12, lineHeight: 1.5 }}>
+                Add videos to the queue — they upload and transcode in the background.
+                <br />
+                You can navigate away and return to check progress anytime.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Card */}
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 560,
-            background: 'rgba(22,23,27,0.9)',
-            backdropFilter: 'blur(28px) saturate(1.6)',
-            WebkitBackdropFilter: 'blur(28px) saturate(1.6)',
-            border: '1px solid var(--hairline)',
-            borderRadius: 24,
-            padding: 'clamp(32px,5vh,48px) clamp(28px,5vw,44px)',
-            boxShadow: '0 32px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)',
-          }}
-        >
-
-          {/* ── FORM ── */}
-          {step === 'form' && (
-            <form onSubmit={(e) => { void handleSubmit(e); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Title */}
-              <label>
-                <span style={fieldLabel}>Title name</span>
-                <input
-                  required
-                  style={inputStyle}
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Big Buck Bunny"
-                />
-              </label>
-
-              {/* Synopsis */}
-              <label>
-                <span style={fieldLabel}>Synopsis</span>
-                <textarea
-                  required
-                  rows={3}
-                  style={{ ...inputStyle, height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.5 }}
-                  value={form.synopsis}
-                  onChange={(e) => setForm((f) => ({ ...f, synopsis: e.target.value }))}
-                  placeholder="Short description of the title"
-                />
-              </label>
-
-              {/* Year */}
-              <label>
-                <span style={fieldLabel}>Year</span>
-                <input
-                  required
-                  type="number"
-                  min={1888}
-                  max={CURRENT_YEAR + 1}
-                  style={{ ...inputStyle, width: 120 }}
-                  value={form.year}
-                  onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
-                />
-              </label>
-
-              {/* File drop zone */}
-              <div>
-                <span style={fieldLabel}>Video file</span>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
+        {/* ── Dashboard Layout ─────────────────────────────────────────────── */}
+        <div>
+          {/* ── Queue dashboard ───────────────────────────────────── */}
+          <div>
+            {/* Queue header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h2
                   style={{
-                    borderRadius: 14,
-                    border: `2px dashed ${dragOver ? 'var(--accent-line)' : form.file ? 'rgba(255,255,255,0.18)' : 'var(--hairline)'}`,
-                    background: dragOver ? 'var(--accent-soft)' : form.file ? 'rgba(255,255,255,0.04)' : 'transparent',
-                    padding: '28px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'border-color .25s, background .25s',
+                    fontFamily: 'var(--display)',
+                    fontWeight: 700,
+                    fontSize: 20,
+                    letterSpacing: '-0.03em',
+                    color: 'var(--text)',
+                    lineHeight: 1,
                   }}
                 >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="video/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                  {form.file ? (
-                    <>
-                      <div style={{ color: 'var(--accent)', marginBottom: 8 }}>
-                        <Icon name="check" size={28} />
-                      </div>
-                      <p style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
-                        {form.file.name}
-                      </p>
-                      <p className="kicker" style={{ color: 'var(--text-faint)' }}>
-                        {(form.file.size / 1024 / 1024).toFixed(1)} MB · click to change
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ color: 'var(--text-faint)', marginBottom: 12 }}>
-                        <Icon name="play" size={28} />
-                      </div>
-                      <p style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 6 }}>
-                        Drop a video here or click to browse
-                      </p>
-                      <p className="kicker" style={{ color: 'var(--text-faint)' }}>MP4 · MKV · MOV</p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {error && (
-                <p style={{
-                  fontSize: 13.5, color: '#e07070',
-                  background: 'rgba(200,80,80,0.10)',
-                  border: '1px solid rgba(200,80,80,0.22)',
-                  borderRadius: 10, padding: '10px 14px', lineHeight: 1.4,
-                }}>
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={!form.file}
-                className="btn btn--play"
-                style={{
-                  marginTop: 8,
-                  width: '100%',
-                  justifyContent: 'center',
-                  height: 50,
-                  borderRadius: 12,
-                  fontSize: 14.5,
-                  opacity: form.file ? 1 : 0.4,
-                  cursor: form.file ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Upload &amp; transcode
-              </button>
-            </form>
-          )}
-
-          {/* ── UPLOADING ── */}
-          {step === 'uploading' && (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <p className="kicker" style={{ marginBottom: 24 }}>Uploading to storage</p>
-              <div style={{
-                width: '100%', height: 4, borderRadius: 99,
-                background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginBottom: 14,
-              }}>
-                <div style={{
-                  width: `${uploadPct}%`, height: '100%',
-                  background: 'var(--accent)', borderRadius: 99,
-                  transition: 'width .3s var(--ease)',
-                }} />
-              </div>
-              <p className="display" style={{ fontSize: 48, letterSpacing: '-0.05em', color: 'var(--text)' }}>
-                {uploadPct}<span style={{ fontSize: 24, color: 'var(--text-dim)' }}>%</span>
-              </p>
-            </div>
-          )}
-
-          {/* ── PROCESSING ── */}
-          {step === 'processing' && (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-                <span style={{
-                  width: 56, height: 56, borderRadius: 99,
-                  border: '3px solid rgba(255,255,255,0.10)',
-                  borderTopColor: 'var(--accent)',
-                  animation: 'spin 1s linear infinite', display: 'block',
-                }} />
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-              </div>
-              <p className="display" style={{ fontSize: 22, marginBottom: 10 }}>
-                {status ? statusLabel[status] : 'Processing…'}
-              </p>
-              <p style={{ fontSize: 14, color: 'var(--text-faint)', lineHeight: 1.5 }}>
-                This may take a few minutes.<br />You can leave this tab open.
-              </p>
-            </div>
-          )}
-
-          {/* ── DONE ── */}
-          {step === 'done' && (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: 99,
-                background: 'rgba(227,189,118,0.12)',
-                border: '1px solid var(--accent-line)',
-                display: 'grid', placeItems: 'center',
-                margin: '0 auto 24px',
-                color: 'var(--accent)',
-              }}>
-                <Icon name="check" size={28} />
-              </div>
-              <p className="display" style={{ fontSize: 24, marginBottom: 8 }}>Transcode complete</p>
-              <p style={{ fontSize: 14, color: 'var(--text-faint)', marginBottom: 32 }}>
-                Your title is ready to stream.
-              </p>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {readyAssetId && (
-                  <button
-                    onClick={() => { void navigate(`/watch/${readyAssetId}`); }}
-                    className="btn btn--play"
-                    style={{ height: 48, paddingInline: 28 }}
+                  Queue
+                </h2>
+                {items.length > 0 && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: 22,
+                      height: 22,
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid var(--hairline)',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'var(--text-dim)',
+                      padding: '0 6px',
+                    }}
                   >
-                    <Icon name="play" size={16} /> Play now
-                  </button>
+                    {items.length}
+                  </span>
                 )}
+              </div>
+
+              {/* Stats bar & Add button */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                {items.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 12, border: '1px solid var(--hairline)' }}>
+                    {[
+                      { id: 'all', count: items.length, label: 'All', color: 'var(--text)' },
+                      {
+                        id: 'active',
+                        count: items.filter((it) => it.phase === 'uploading' || it.phase === 'processing').length,
+                        label: 'Active',
+                        color: 'var(--accent)',
+                      },
+                      {
+                        id: 'done',
+                        count: items.filter((it) => it.phase === 'done').length,
+                        label: 'Done',
+                        color: '#7dcea0',
+                      },
+                      {
+                        id: 'error',
+                        count: items.filter((it) => it.phase === 'error').length,
+                        label: 'Failed',
+                        color: '#e07070',
+                      },
+                    ].map((s) => {
+                      const isActiveTab = statusFilter === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => handleFilterChange(s.id as FilterType)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 12px',
+                            borderRadius: 8,
+                            background: isActiveTab ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s, color 0.2s',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: 'var(--display)',
+                              fontSize: 15,
+                              fontWeight: 700,
+                              color: isActiveTab ? s.color : 'var(--text-faint)',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {s.count}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: isActiveTab ? 'var(--text)' : 'var(--text-ghost)',
+                              fontWeight: 600,
+                              letterSpacing: '0.05em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {s.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                
                 <button
-                  onClick={() => {
-                    setStep('form');
-                    setForm({ name: '', synopsis: '', year: String(CURRENT_YEAR), file: null });
-                    setUploadPct(0);
-                    setStatus(null);
-                    setReadyAssetId(null);
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn btn--play"
+                  style={{
+                    height: 38,
+                    padding: '0 18px',
+                    borderRadius: 999,
+                    fontSize: 14,
+                    gap: 6,
                   }}
-                  className="btn btn--ghost"
-                  style={{ height: 48, paddingInline: 24 }}
                 >
-                  Upload another
+                  <Icon name="plus" size={16} stroke={2.5} />
+                  Add
                 </button>
               </div>
             </div>
-          )}
 
-          {/* ── ERROR ── */}
-          {step === 'error' && (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <p className="display" style={{ fontSize: 22, marginBottom: 12, color: '#e07070' }}>Upload failed</p>
-              {error && (
-                <p style={{
-                  fontSize: 13.5, color: '#e07070',
-                  background: 'rgba(200,80,80,0.10)',
-                  border: '1px solid rgba(200,80,80,0.22)',
-                  borderRadius: 10, padding: '10px 14px',
-                  lineHeight: 1.4, marginBottom: 24,
-                }}>
-                  {error}
-                </p>
+            {/* Queue container */}
+            <div
+              style={{
+                background: 'rgba(22,23,27,0.75)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 42,
+                overflow: 'hidden',
+                minHeight: 220,
+                boxShadow: '0 16px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
+              }}
+            >
+              {filteredItems.length === 0 ? (
+                items.length === 0 ? (
+                  <EmptyQueue onAddClick={() => setIsModalOpen(true)} />
+                ) : (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>
+                    <p>No videos match this filter.</p>
+                  </div>
+                )
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 10 }}>
+                  {paginatedItems.map((item) => (
+                    <UploadQueueItem
+                      key={item.id}
+                      item={item}
+                      onRemove={remove}
+                      onRetry={(id) => {
+                        if (accessToken) retry(id, accessToken);
+                      }}
+                    />
+                  ))}
+                </div>
               )}
-              <button
-                onClick={() => { setStep('form'); setError(null); }}
-                className="btn btn--ghost"
-                style={{ height: 48, paddingInline: 24 }}
-              >
-                Try again
-              </button>
             </div>
-          )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '0 8px' }}>
+                <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>
+                  Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, filteredItems.length)} of {filteredItems.length}
+                </span>
+                
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="btn btn--ghost"
+                    style={{ height: 32, padding: '0 12px', fontSize: 13, borderRadius: 8, opacity: currentPage === 1 ? 0.3 : 1 }}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="btn btn--ghost"
+                    style={{ height: 32, padding: '0 12px', fontSize: 13, borderRadius: 8, opacity: currentPage === totalPages ? 0.3 : 1 }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Info footer */}
+            <p
+              style={{
+                fontSize: 12,
+                color: 'var(--text-faint)',
+                marginTop: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Icon name="info" size={13} />
+              Uploads continue in the background. Navigate freely and return to check status.
+            </p>
+          </div>
         </div>
       </div>
+      {isModalOpen && <UploadModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 }

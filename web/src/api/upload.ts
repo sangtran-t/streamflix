@@ -19,10 +19,6 @@ export interface UploadStatusResponse {
   progress: number | null;
 }
 
-/**
- * Step 1: Initialise the upload — creates Title + Asset rows, returns a
- * pre-signed PUT URL the client uses to upload directly to MinIO (ADR-0008).
- */
 export async function initUpload(
   body: InitUploadRequest,
   accessToken: string,
@@ -42,10 +38,6 @@ export async function initUpload(
   return res.json() as Promise<InitUploadResponse>;
 }
 
-/**
- * Step 2: PUT the raw file directly to MinIO using the pre-signed URL.
- * onProgress is called with upload fraction (0–1) if the browser supports it.
- */
 export function putFileToStorage(
   putUrl: string,
   file: File,
@@ -74,13 +66,7 @@ export function putFileToStorage(
   });
 }
 
-/**
- * Step 3: Notify the API that the PUT succeeded — triggers the transcode job.
- */
-export async function completeUpload(
-  assetId: string,
-  accessToken: string,
-): Promise<void> {
+export async function completeUpload(assetId: string, accessToken: string): Promise<void> {
   const res = await fetch(`/api/v1/uploads/${assetId}/complete`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -91,9 +77,6 @@ export async function completeUpload(
   }
 }
 
-/**
- * Poll for the current asset processing status.
- */
 export async function getUploadStatus(
   assetId: string,
   accessToken: string,

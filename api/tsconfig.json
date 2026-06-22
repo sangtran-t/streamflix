@@ -28,7 +28,7 @@
     "noUnusedParameters": true,
     // Include Jest globals so the IDE resolves describe/it/expect in *.spec.ts files.
     // @types/jest is dev-only and has no runtime footprint.
-    "types": ["jest", "node"],
+    "types": ["jest", "node"]
   },
   "include": ["src/**/*"],
   // node_modules and dist are always excluded; spec files are included here so

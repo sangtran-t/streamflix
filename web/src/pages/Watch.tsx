@@ -38,7 +38,6 @@ export default function Watch() {
         setMasterUrl(data.masterUrl);
         setTitleId(data.titleId);
         setTitleSlug(data.titleSlug);
-        // API doesn't expose titleName — use slug as display fallback
         setTitleName(data.titleSlug ?? undefined);
 
         if (data.titleId) {
@@ -81,24 +80,33 @@ export default function Watch() {
     else void navigate('/');
   };
 
-  // Re-issues the sf_play signed cookie when hls.js reports a fatal 401/403.
-  // After this resolves, Player calls hls.startLoad() to resume playback.
   const handleRefreshPlayback = useCallback(async () => {
     if (!assetId || !accessToken) throw new Error('No credentials');
     await getPlaybackUrl(assetId, accessToken);
-    // Side effect: server sets a fresh sf_play cookie; no return value needed.
   }, [assetId, accessToken]);
 
-  // Loading state — keep it minimal (player will show soon)
   if (loading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#000', display: 'grid', placeItems: 'center', fontFamily: 'var(--sans)' }}>
-        <span style={{
-          width: 48, height: 48, borderRadius: 99,
-          border: '3px solid rgba(255,255,255,0.15)',
-          borderTopColor: 'var(--accent)',
-          animation: 'spin 1s linear infinite',
-        }} />
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#000',
+          display: 'grid',
+          placeItems: 'center',
+          fontFamily: 'var(--sans)',
+        }}
+      >
+        <span
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 99,
+            border: '3px solid rgba(255,255,255,0.15)',
+            borderTopColor: 'var(--accent)',
+            animation: 'spin 1s linear infinite',
+          }}
+        />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -106,15 +114,35 @@ export default function Watch() {
 
   if (error || !masterUrl) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#000', display: 'grid', placeItems: 'center', fontFamily: 'var(--sans)', color: '#f7f6f3' }}>
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#000',
+          display: 'grid',
+          placeItems: 'center',
+          fontFamily: 'var(--sans)',
+          color: '#f7f6f3',
+        }}
+      >
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 24, fontSize: 15 }}>{error ?? 'Playback unavailable'}</p>
-          <button onClick={handleBack} style={{
-            padding: '10px 24px', borderRadius: 999,
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#f7f6f3', fontSize: 14, fontWeight: 600,
-            background: 'none', cursor: 'pointer', fontFamily: 'var(--sans)',
-          }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 24, fontSize: 15 }}>
+            {error ?? 'Playback unavailable'}
+          </p>
+          <button
+            onClick={handleBack}
+            style={{
+              padding: '10px 24px',
+              borderRadius: 999,
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#f7f6f3',
+              fontSize: 14,
+              fontWeight: 600,
+              background: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--sans)',
+            }}
+          >
             ← Back
           </button>
         </div>

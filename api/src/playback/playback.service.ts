@@ -22,8 +22,6 @@ export class PlaybackService {
     private readonly assets: Repository<Asset>,
     private readonly signing: SigningService,
   ) {
-    // EDGE_BASE is the base URL the browser uses to reach the delivery edge.
-    // Behind the dev proxy this is http://localhost:8080/hls (no trailing slash).
     this.edgeBase = (process.env['EDGE_BASE'] ?? 'http://localhost:8080/hls').replace(/\/$/, '');
   }
 

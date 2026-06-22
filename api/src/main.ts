@@ -11,12 +11,8 @@ async function bootstrap(): Promise<void> {
 
   app.useLogger(new StructuredLogger());
 
-  // Cookie parser — required for reading httpOnly refresh-token cookie.
   app.use(cookieParser());
 
-  // URI versioning: /v1/auth/..., /v1/catalog/..., /v1/playback/...
-  // Operational endpoints (healthz, readyz) are marked VERSION_NEUTRAL
-  // and remain unversioned.
   app.enableVersioning({ type: VersioningType.URI });
 
   app.useGlobalPipes(

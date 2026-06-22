@@ -10,13 +10,13 @@ export async function register(
 ): Promise<AuthResult> {
   const res = await fetch('/api/v1/auth/register', {
     method: 'POST',
-    credentials: 'include', // send/receive sf_refresh cookie
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, displayName }),
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as { message?: string }).message ?? `Register failed: ${res.status}`);
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? `Register failed: ${res.status}`);
   }
   return res.json() as Promise<AuthResult>;
 }
@@ -29,8 +29,8 @@ export async function login(email: string, password: string): Promise<AuthResult
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as { message?: string }).message ?? `Login failed: ${res.status}`);
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? `Login failed: ${res.status}`);
   }
   return res.json() as Promise<AuthResult>;
 }

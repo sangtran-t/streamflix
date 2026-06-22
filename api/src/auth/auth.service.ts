@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -16,7 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 export interface JwtPayload {
-  sub: string;   // userId
+  sub: string; // userId
   email: string;
 }
 
@@ -50,7 +46,11 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const user = this.users.create({ email: dto.email, passwordHash, displayName: dto.displayName });
+    const user = this.users.create({
+      email: dto.email,
+      passwordHash,
+      displayName: dto.displayName,
+    });
     await this.users.save(user);
     return this.issue(user, uuidv4());
   }
@@ -96,13 +96,10 @@ export class AuthService {
     await this.refreshTokens.update({ tokenHash: hash }, { revoked: true });
   }
 
-  // ── Internal helpers ──────────────────────────────────────────────────────
-
   private async issue(user: User, family: string): Promise<AuthResult> {
     const payload: JwtPayload = { sub: user.id, email: user.email };
     const accessToken = this.jwt.sign(payload);
 
-    // Generate opaque refresh token and persist its hash.
     const rawRefresh = crypto.randomBytes(40).toString('hex');
     const expiresAt = new Date(Date.now() + REFRESH_TTL_DAYS * 86_400_000);
     await this.refreshTokens.save(

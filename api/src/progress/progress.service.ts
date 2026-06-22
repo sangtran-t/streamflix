@@ -47,24 +47,14 @@ export class ProgressService {
     });
   }
 
-  /**
-   * Upsert watch progress for (user, title). Marks completed when position
-   * exceeds 90% of runtime. Safe to call from the player's timeupdate event.
-   */
-  async upsertProgress(
-    userId: string,
-    titleId: string,
-    positionSeconds: number,
-  ): Promise<void> {
-    // Resolve runtime to determine completion threshold.
+  async upsertProgress(userId: string, titleId: string, positionSeconds: number): Promise<void> {
     const title = await this.titles.findOne({
       where: { id: titleId },
       relations: ['assets'],
     });
     const runtimeSeconds = title?.runtimeSeconds ?? null;
 
-    const completed =
-      runtimeSeconds !== null && positionSeconds >= runtimeSeconds * 0.9;
+    const completed = runtimeSeconds !== null && positionSeconds >= runtimeSeconds * 0.9;
 
     await this.progress
       .createQueryBuilder()

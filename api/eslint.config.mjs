@@ -37,7 +37,11 @@ export default [
       ],
       '@typescript-eslint/explicit-function-return-type': [
         'warn',
-        { allowExpressions: true, allowTypedFunctionExpressions: true, allowHigherOrderFunctions: true },
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
       ],
       // NestJS async lifecycle methods don't always use await
       '@typescript-eslint/require-await': 'off',

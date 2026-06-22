@@ -1,11 +1,10 @@
-// Package worker implements the Redis Streams consumer loop that picks up
-// transcode jobs, runs ffmpeg, and reports status back via pub/sub.
+// Package worker defines the shared schema types for transcode jobs and status messages.
 package worker
 
 import "time"
 
-// TranscodeJob is the message schema published to the "transcode:jobs" stream
-// by NestJS and consumed by this worker.
+// TranscodeJob is the workflow input schema for TranscodeWorkflow.
+// Nest passes this as the first argument when starting the workflow via Temporal.
 // Canonical definition: docs/COMMUNICATION.md §2.
 type TranscodeJob struct {
 	SchemaVersion string    `json:"schemaVersion"`
@@ -34,7 +33,5 @@ type StatusMessage struct {
 	At              time.Time `json:"at"`
 }
 
-// ptr helpers for optional fields.
-func strPtr(s string) *string  { return &s }
-func intPtr(i int) *int        { return &i }
-func f64Ptr(f float64) *float64 { return &f }
+func strPtr(s string) *string { return &s }
+func intPtr(i int) *int       { return &i }

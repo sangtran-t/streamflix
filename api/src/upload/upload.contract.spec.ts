@@ -1,15 +1,15 @@
 /**
  * Contract test: Nest → Go job message schema
  *
- * Verifies that the fields written to the Redis Stream by UploadService.completeUpload()
- * match the canonical schema in COMMUNICATION.md §2.
+ * Verifies that the fields passed as Temporal TranscodeWorkflow input by
+ * UploadService.completeUpload() match the canonical schema in COMMUNICATION.md §2.
  *
  * If this test fails, the Go worker's job_test.go will also fail — both must
  * be updated together whenever the schema changes.
  */
 describe('Transcode job message contract (COMMUNICATION.md §2)', () => {
   it('should include all required fields with correct types', () => {
-    // This is the shape written to Redis Streams by UploadService.completeUpload().
+    // This is the shape passed as Temporal TranscodeWorkflow input by UploadService.completeUpload().
     // We validate the shape here rather than mocking the full NestJS DI tree.
     const jobMessage: Record<string, string> = {
       schemaVersion: '1.0',

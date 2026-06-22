@@ -62,7 +62,7 @@ func VerifyCookie(secret, cookieValue, assetId string) (userId string, err error
 	payloadB64 := cookieValue[:idx]
 	sigB64 := cookieValue[idx+1:]
 
-	// --- 1. Constant-time HMAC verify ---
+	// Constant-time HMAC verify.
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(payloadB64))
 	expectedSig := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
@@ -72,7 +72,7 @@ func VerifyCookie(secret, cookieValue, assetId string) (userId string, err error
 		return "", ErrMalformed
 	}
 
-	// --- 2. Decode payload ---
+	// Decode payload.
 	payloadJSON, err := base64.RawURLEncoding.DecodeString(payloadB64)
 	if err != nil {
 		return "", fmt.Errorf("%w: base64 decode: %v", ErrMalformed, err)
@@ -82,13 +82,13 @@ func VerifyCookie(secret, cookieValue, assetId string) (userId string, err error
 		return "", fmt.Errorf("%w: json decode: %v", ErrMalformed, err)
 	}
 
-	// --- 3. Expiry check (with clock skew) ---
+	// Expiry check with clock skew.
 	expiry := time.Unix(p.E, 0)
 	if time.Now().After(expiry.Add(ClockSkew)) {
 		return "", ErrExpired
 	}
 
-	// --- 4. Asset match ---
+	// Asset match.
 	if p.A != assetId {
 		return "", ErrAssetMismatch
 	}

@@ -28,7 +28,12 @@ export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL,
   entities: [User, Title, Genre, Asset, WatchProgress, RefreshToken],
-  migrations: [InitSchema1749340800000, SeedPhase11749340800001, Phase3Schema1749340800002, AddUserRole1749340800003],
+  migrations: [
+    InitSchema1749340800000,
+    SeedPhase11749340800001,
+    Phase3Schema1749340800002,
+    AddUserRole1749340800003,
+  ],
   synchronize: false,
   logging: ['error', 'warn'],
 };

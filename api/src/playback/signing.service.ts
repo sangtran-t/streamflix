@@ -27,7 +27,11 @@ export class SigningService {
    * Build a signed cookie value. ttlSeconds defaults to 1 h (longer than a
    * typical title so mid-playback refresh is rare).
    */
-  buildCookie(userId: string, assetId: string, ttlSeconds = 3600): { cookie: string; expiresAt: Date } {
+  buildCookie(
+    userId: string,
+    assetId: string,
+    ttlSeconds = 3600,
+  ): { cookie: string; expiresAt: Date } {
     const expiryUnix = Math.floor(Date.now() / 1000) + ttlSeconds;
     const payload = this.encodePayload({ u: userId, a: assetId, e: expiryUnix });
     const sig = createHmac('sha256', this.secret).update(payload).digest('base64url');

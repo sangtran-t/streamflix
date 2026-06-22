@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { type TitleSummary, getTitle, listTitles } from '../api/catalog.ts';
 import { Icon } from '../components/ui/Icon.tsx';
-import { Reveal } from '../components/ui/Reveal.tsx';
 import { Still } from '../components/ui/Still.tsx';
+import { Reveal } from '../components/ui/Reveal.tsx';
 import { useAuth } from '../hooks/useAuth.ts';
+import { FilmCard } from '../components/ui/FilmCard.tsx';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -15,44 +16,7 @@ function formatRuntime(seconds: number | null): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-// ── FilmCard (landscape 16/9 for "more like this") ───────────────────────────
-
-function FilmCard({ title }: { title: TitleSummary }) {
-  const [hov, setHov] = useState(false);
-
-  return (
-    <Link
-      to={`/title/${title.slug}`}
-      style={{ display: 'block', textAlign: 'left' }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      <article>
-        <div style={{
-          position: 'relative', borderRadius: 16, overflow: 'hidden', aspectRatio: '16/9',
-          transform: hov ? 'translateY(-6px)' : 'none',
-          transition: 'transform .6s var(--ease), box-shadow .6s var(--ease)',
-          boxShadow: hov ? '0 30px 60px -28px rgba(0,0,0,0.8)' : '0 0 0 rgba(0,0,0,0)',
-        }}>
-          <Still imageUrl={title.heroImageUrl ?? title.posterImageUrl} style={{ position: 'absolute', inset: 0 }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(var(--scrim-deep),0.78) 0%, transparent 48%)' }} />
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: hov ? 1 : 0, transition: 'opacity .4s' }}>
-            <span style={{ width: 60, height: 60, borderRadius: 99, background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(8px)', display: 'grid', placeItems: 'center', border: '1px solid rgba(255,255,255,0.25)' }}>
-              <Icon name="play" size={21} />
-            </span>
-          </div>
-          <div style={{ position: 'absolute', left: 20, right: 20, bottom: 18, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <h3 className="display" style={{ fontSize: 20, letterSpacing: '-0.03em', flex: 1, paddingRight: 8 }}>{title.name}</h3>
-            <span className="kicker" style={{ color: 'rgba(255,255,255,0.62)', flexShrink: 0 }}>{title.year}</span>
-          </div>
-        </div>
-        <p className="kicker" style={{ marginTop: 12, color: 'var(--text-faint)' }}>
-          {title.genres.slice(0, 2).join(' · ')}
-        </p>
-      </article>
-    </Link>
-  );
-}
+// (Removed local FilmCard)
 
 // ── TitlePage ─────────────────────────────────────────────────────────────────
 
@@ -81,7 +45,9 @@ export default function TitlePage() {
             .filter((x) => x.id !== t.id && x.genres.some((g) => t.genres.includes(g)))
             .slice(0, 3);
           setRelated(rel);
-        } catch { /* non-fatal */ }
+        } catch {
+          /* non-fatal */
+        }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -105,7 +71,13 @@ export default function TitlePage() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
         <div className="grain" aria-hidden="true" />
-        <div style={{ height: '82vh', background: 'var(--bg-2)', animation: 'pulse 1.6s ease-in-out infinite alternate' }}>
+        <div
+          style={{
+            height: '82vh',
+            background: 'var(--bg-2)',
+            animation: 'pulse 1.6s ease-in-out infinite alternate',
+          }}
+        >
           <style>{`@keyframes pulse{from{opacity:.4}to{opacity:.8}}`}</style>
         </div>
       </div>
@@ -114,164 +86,215 @@ export default function TitlePage() {
 
   if (error || !title) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'grid', placeItems: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'var(--bg)',
+          display: 'grid',
+          placeItems: 'center',
+        }}
+      >
         <div className="grain" aria-hidden="true" />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-faint)', marginBottom: 24 }}>{error ?? 'Title not found'}</p>
-          <Link to="/" className="btn btn--ghost"><Icon name="back" size={16} /> Home</Link>
+          <p style={{ color: 'var(--text-faint)', marginBottom: 24 }}>
+            {error ?? 'Title not found'}
+          </p>
+          <Link to="/" className="btn btn--ghost">
+            <Icon name="back" size={16} /> Home
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="screen-anim" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
+    <div
+      className="screen-anim"
+      style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', position: 'relative' }}
+    >
       <div className="grain" aria-hidden="true" />
 
-      {/* ── Cinematic backdrop header ─────────────────────────────────────── */}
-      <header style={{ position: 'relative', height: '82vh', minHeight: 560, overflow: 'hidden' }}>
-        <Still
-          imageUrl={title.heroImageUrl ?? title.posterImageUrl}
-          ken
-          style={{ position: 'absolute', inset: 0 }}
-        />
-        <div style={{ position: 'absolute', inset: 0, background:
-          'linear-gradient(0deg, var(--bg) 1%, rgba(var(--scrim),0.2) 42%, rgba(var(--scrim),0.5) 100%)' }} />
+      {/* ── Full Page Background ────────────────────────────────────────────── */}
+      <Still
+        imageUrl={title.heroImageUrl ?? title.posterImageUrl}
+        style={{ 
+          position: 'fixed', 
+          top: 0, left: 0, right: 0, height: '100vh', 
+          zIndex: 0,
+          opacity: 0.6
+        }} 
+      />
+      {/* Overlay gradient to fade bottom into the dark page background */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, height: '100vh',
+          zIndex: 0,
+          background: 'linear-gradient(180deg, transparent 0%, rgba(22,23,27,0.4) 50%, var(--bg) 100%)',
+          pointerEvents: 'none'
+        }}
+      />
 
-        {/* Back button */}
-        <Link to="/" className="btn btn--icon" style={{ position: 'absolute', top: 100, left: 'var(--page-x)' }}>
-          <Icon name="back" size={18} />
-        </Link>
+      {/* Back button */}
+      <Link
+        to="/"
+        className="btn btn--icon"
+        style={{ position: 'absolute', top: 'clamp(20px, 4vh, 40px)', left: 'var(--page-x)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(10px)', zIndex: 100 }}
+      >
+        <Icon name="back" size={18} />
+      </Link>
 
-        {/* Bottom-anchored content */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(40px,7vh,72px) var(--page-x)' }}>
-          <p className="kicker kicker--accent" style={{ marginBottom: 22 }}>
-            {title.genres.slice(0, 2).join(' · ')} · {title.year}
-          </p>
-          <h1
-            className="display display--xl"
-            style={{ fontSize: 'clamp(13px,1.8vw,27px)', maxWidth: '16ch', textTransform: 'uppercase' }}
-          >
-            {title.name}
-          </h1>
-          <div style={{ display: 'flex', gap: 12, marginTop: 34, flexWrap: 'wrap' }}>
-            {isReady ? (
-              <button className="btn btn--play" onClick={handlePlay}>
-                <Icon name="play" size={18} /> <span>Play</span>
-              </button>
-            ) : (
-              <button className="btn btn--ghost" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                {title.assetStatus === 'processing' ? 'Transcoding…' : 'Not available'}
-              </button>
-            )}
-            <button className="btn btn--ghost" onClick={() => { void navigate('/browse'); }}>
-              <Icon name="plus" size={17} /> <span>Add</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Editorial body ────────────────────────────────────────────────── */}
-      <div style={{
-        padding: 'clamp(56px,8vh,96px) var(--page-x) clamp(80px,12vh,140px)',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0,1.6fr) minmax(0,0.7fr)',
-        gap: 'clamp(40px,7vw,110px)',
-        maxWidth: 1320,
-      }}>
-        {/* Left column */}
-        <Reveal>
-          <div>
-            {/* Synopsis as logline */}
-            {title.synopsis && (
-              <p className="editorial" style={{ fontSize: 'clamp(22px,2.4vw,34px)', lineHeight: 1.3, marginBottom: 40 }}>
-                {title.synopsis}
-              </p>
-            )}
-
-            {/* Pull-quote block */}
-            <figure style={{ borderLeft: '2px solid var(--accent-line)', paddingLeft: 28, margin: '0 0 56px' }}>
-              <blockquote className="editorial" style={{ fontSize: 'clamp(20px,2.2vw,28px)', lineHeight: 1.32, color: 'var(--text)' }}>
-                "{title.synopsis?.split('.')[0] ?? title.name}"
-              </blockquote>
-              <figcaption className="kicker" style={{ marginTop: 18 }}>Streamflix Editorial</figcaption>
-            </figure>
-
-            {/* Genre tag chips */}
-            {title.genres.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {title.genres.map((g) => (
-                  <Link
-                    key={g}
-                    to="/browse"
-                    className="chip"
-                    style={{ padding: '9px 16px', borderRadius: 99, border: '1px solid var(--hairline)', fontSize: 13.5, color: 'var(--text-dim)', transition: 'all .3s var(--ease)' }}
-                  >
-                    {g}
-                  </Link>
-                ))}
+      {/* ── Content Wrapper ─────────────────────────────────────────────────── */}
+      <div style={{ position: 'relative', zIndex: 10, paddingTop: '35vh', paddingBottom: 100 }}>
+        <div
+          style={{
+            padding: '0 var(--page-x)',
+            maxWidth: 1400,
+            margin: '0 auto',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 64,
+            alignItems: 'flex-start',
+          }}
+        >
+          {/* Left Column (Poster & Info) */}
+          <Reveal style={{ flex: '0 0 280px', maxWidth: 300 }}>
+            <div>
+              {/* Poster */}
+              <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.4)', marginBottom: 24, aspectRatio: '2/3', background: 'var(--bg-2)' }}>
+                <img 
+                  src={title.posterImageUrl ?? ''} 
+                  alt={title.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
               </div>
-            )}
 
-            {/* Sign-in nudge */}
-            {!isAuthenticated && isReady && (
-              <p style={{ marginTop: 40, fontSize: 14, color: 'var(--text-faint)' }}>
-                <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Sign in</Link> to watch this title and track your progress.
-              </p>
-            )}
-          </div>
-        </Reveal>
+              {/* Title */}
+              <h1 style={{ fontFamily: 'var(--display)', fontSize: 32, fontWeight: 800, lineHeight: 1.2, marginBottom: 8, letterSpacing: '-0.02em' }}>
+                {title.name}
+              </h1>
 
-        {/* Right sidebar */}
-        <Reveal delay={120}>
-          <aside>
-            <div style={{ display: 'grid', gap: 0 }}>
-              {/* Year */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '16px 0', borderTop: '1px solid var(--hairline-soft)' }}>
-                <span className="kicker" style={{ alignSelf: 'center' }}>Year</span>
-                <span style={{ fontSize: 15.5 }}>{title.year}</span>
+              {/* Tags/Pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.2)' }}>{title.year}</span>
+                {title.assetStatus === 'ready' ? (
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.2)' }}>HD</span>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.1)', color: '#e07070' }}>{title.assetStatus}</span>
+                )}
               </div>
-              {/* Runtime */}
-              {title.runtimeSeconds && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '16px 0', borderTop: '1px solid var(--hairline-soft)' }}>
-                  <span className="kicker" style={{ alignSelf: 'center' }}>Runtime</span>
-                  <span style={{ fontSize: 15.5 }}>{formatRuntime(title.runtimeSeconds)}</span>
+
+              {/* Synopsis */}
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: 'var(--text)' }}>Synopsis</h3>
+                {title.synopsis ? (
+                  <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-faint)' }}>{title.synopsis}</p>
+                ) : (
+                  <p style={{ fontSize: 14, color: 'var(--text-ghost)', fontStyle: 'italic' }}>No synopsis available.</p>
+                )}
+              </div>
+
+              {/* Detailed Metadata Grid */}
+              <div style={{ display: 'grid', gap: 16, fontSize: 13 }}>
+                {title.runtimeSeconds && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 12 }}>
+                    <span style={{ color: 'var(--text-ghost)', fontWeight: 600 }}>Runtime</span>
+                    <span style={{ color: 'var(--text-dim)' }}>{formatRuntime(title.runtimeSeconds)}</span>
+                  </div>
+                )}
+                {title.genres.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 12 }}>
+                    <span style={{ color: 'var(--text-ghost)', fontWeight: 600 }}>Genres</span>
+                    <span style={{ color: 'var(--text-dim)' }}>{title.genres.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Sign-in nudge */}
+              {!isAuthenticated && isReady && (
+                <div style={{ marginTop: 40, padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--hairline)' }}>
+                  <p style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+                    Please <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline' }}>Sign In</Link> to save your watch history.
+                  </p>
                 </div>
               )}
-              {/* Genre */}
-              {title.genres.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '16px 0', borderTop: '1px solid var(--hairline-soft)' }}>
-                  <span className="kicker" style={{ alignSelf: 'center' }}>Genre</span>
-                  <span style={{ fontSize: 15.5 }}>{title.genres.join(', ')}</span>
-                </div>
-              )}
-              {/* Status indicator */}
-              {title.assetStatus && title.assetStatus !== 'ready' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '16px 0', borderTop: '1px solid var(--hairline-soft)', borderBottom: '1px solid var(--hairline-soft)' }}>
-                  <span className="kicker" style={{ alignSelf: 'center' }}>Status</span>
-                  <span style={{ fontSize: 15.5, color: 'var(--text-dim)', textTransform: 'capitalize' }}>{title.assetStatus}</span>
-                </div>
-              )}
-              {/* Upload link */}
-              <div style={{ padding: '20px 0', color: 'var(--text-dim)', fontSize: 14 }}>
-                <Link to="/admin/upload" style={{ color: 'var(--accent)', opacity: 0.8 }}>+ Upload new title</Link>
-              </div>
-            </div>
-          </aside>
-        </Reveal>
-      </div>
-
-      {/* ── More like this ────────────────────────────────────────────────── */}
-      {related.length > 0 && (
-        <section style={{ padding: '0 var(--page-x) clamp(90px,14vh,150px)' }}>
-          <Reveal>
-            <p className="kicker" style={{ marginBottom: 36 }}>If you liked this</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
-              {related.map((r) => <FilmCard key={r.id} title={r} />)}
             </div>
           </Reveal>
-        </section>
-      )}
+
+          {/* Right Column (Actions & Expandable Content) */}
+          <Reveal delay={120} style={{ flex: '1 1 0%', minWidth: 0 }}>
+            <div>
+              {/* Full Width Glassmorphism Action Bar */}
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  flexWrap: 'wrap',
+                  gap: 16, 
+                  padding: '24px 32px', 
+                  background: 'rgba(255,255,255,0.04)', 
+                  backdropFilter: 'blur(32px)', 
+                  WebkitBackdropFilter: 'blur(32px)', 
+                  borderRadius: 20,
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  marginBottom: 32
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                  {isReady ? (
+                    <button 
+                      className="btn" 
+                      onClick={handlePlay}
+                      style={{ height: 48, padding: '0 32px', fontSize: 16, fontWeight: 700, borderRadius: 999, background: 'var(--accent)', color: '#000', boxShadow: '0 8px 32px var(--accent-soft)' }}
+                    >
+                      <Icon name="play" size={18} /> <span style={{ marginLeft: 8 }}>Play</span>
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn--ghost"
+                      disabled
+                      style={{ height: 48, padding: '0 32px', fontSize: 16, borderRadius: 999, opacity: 0.5, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)' }}
+                    >
+                      {title.assetStatus === 'processing' ? 'Processing…' : 'Not ready'}
+                    </button>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button className="btn btn--ghost" style={{ height: 48, padding: '0 20px', borderRadius: 999, background: 'transparent', flexDirection: 'column', gap: 4 }} title="Favorite">
+                      <Icon name="star" size={18} /> <span style={{ fontSize: 11, fontWeight: 600 }}>Favorite</span>
+                    </button>
+                    <button className="btn btn--ghost" style={{ height: 48, padding: '0 20px', borderRadius: 999, background: 'transparent', flexDirection: 'column', gap: 4 }} title="Add to List">
+                      <Icon name="plus" size={18} /> <span style={{ fontSize: 11, fontWeight: 600 }}>Add</span>
+                    </button>
+                    <button className="btn btn--ghost" style={{ height: 48, padding: '0 20px', borderRadius: 999, background: 'transparent', flexDirection: 'column', gap: 4 }} title="Share">
+                      <Icon name="upload" size={18} /> <span style={{ fontSize: 11, fontWeight: 600 }}>Share</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Rating Badge Right Aligned */}
+                <div style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, fontWeight: 700, fontSize: 13, border: '1px solid var(--hairline-soft)' }}>
+                  <Icon name="star" size={14} style={{ color: 'var(--accent)' }} /> 0.0 <span style={{ fontWeight: 400, opacity: 0.8 }}>Rating</span>
+                </div>
+              </div>
+
+              {/* Related / More Like This (Expands downwards infinitely) */}
+              {related.length > 0 && (
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, color: 'var(--text)' }}>More Like This</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 24 }}>
+                    {related.map((r) => (
+                      <FilmCard key={r.id} title={r} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </Reveal>
+        </div>
+      </div>
     </div>
   );
 }

@@ -25,10 +25,7 @@ func main() {
 	logger := applog.New(cfg.ServiceName)
 	defer logger.Sync() //nolint:errcheck
 
-	// S3/MinIO client — edge fetches HLS objects on behalf of verified players.
-	// useSSL=false for local MinIO dev (http://); cloud endpoints use https://.
-	useSSL := false
-	store, err := storage.New(cfg.S3Endpoint, cfg.S3Key, cfg.S3Secret, cfg.S3Bucket, useSSL)
+	store, err := storage.New(cfg.S3Endpoint, cfg.S3Key, cfg.S3Secret, cfg.S3Bucket, false)
 	if err != nil {
 		logger.Fatal("failed to init storage client", zap.Error(err))
 	}

@@ -8,11 +8,7 @@ import (
 	"syscall"
 )
 
-// ExtractPoster extracts a single frame from inputPath at offsetSeconds and
-// saves it as a JPEG to outDir/poster.jpg (B2 — poster-frame extraction).
-//
-// On failure it returns an error but does not kill the caller — poster
-// extraction is best-effort; a missing poster does not fail the transcode job.
+// ExtractPoster extracts a single frame at offsetSeconds from inputPath and saves it as outDir/poster.jpg.
 func ExtractPoster(ctx context.Context, inputPath, outDir string, offsetSeconds int) (string, error) {
 	outPath := filepath.Join(outDir, "poster.jpg")
 	cmd := exec.CommandContext(ctx, "ffmpeg", //nolint:gosec

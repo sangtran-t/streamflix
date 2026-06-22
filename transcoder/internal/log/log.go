@@ -1,4 +1,3 @@
-// Package log provides a structured JSON logger backed by go.uber.org/zap.
 package log
 
 import (

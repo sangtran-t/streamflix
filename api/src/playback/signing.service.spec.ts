@@ -10,12 +10,13 @@ import { createHmac } from 'crypto';
 import { SigningService } from './signing.service';
 
 const GOLDEN = {
-  secret:  'test-secret',
-  userId:  '11111111-1111-1111-1111-111111111111',
+  secret: 'test-secret',
+  userId: '11111111-1111-1111-1111-111111111111',
   assetId: '22222222-2222-2222-2222-222222222222',
-  expiry:  1750000000,
-  payload: 'eyJ1IjoiMTExMTExMTEtMTExMS0xMTExLTExMTEtMTExMTExMTExMTExIiwiYSI6IjIyMjIyMjIyLTIyMjItMjIyMi0yMjIyLTIyMjIyMjIyMjIyMiIsImUiOjE3NTAwMDAwMDB9',
-  sig:     'VEoV18jR3Wv7HJKbaInMAImlKXQhoLuHyjgT3wlcSI0',
+  expiry: 3000000000,
+  payload:
+    'eyJ1IjoiMTExMTExMTEtMTExMS0xMTExLTExMTEtMTExMTExMTExMTExIiwiYSI6IjIyMjIyMjIyLTIyMjItMjIyMi0yMjIyLTIyMjIyMjIyMjIyMiIsImUiOjMwMDAwMDAwMDB9',
+  sig: 'JcJfV7BaSYGI-j-0z-wN_C21iaVq6dp2layBkmzrGLQ',
 };
 
 describe('SigningService — golden vector contract (COMMUNICATION.md §4.3)', () => {

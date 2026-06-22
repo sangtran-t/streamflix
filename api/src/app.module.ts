@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { PlaybackModule } from './playback/playback.module';
 import { RedisModule } from './redis/redis.module';
+import { TemporalModule } from './temporal/temporal.module';
 import { StorageModule } from './storage/storage.module';
 import { UploadModule } from './upload/upload.module';
 
@@ -16,6 +17,7 @@ import { UploadModule } from './upload/upload.module';
     DatabaseModule,
     RedisModule,
     StorageModule,
+    TemporalModule,
     HealthModule,
     AuthModule,
     CatalogModule,

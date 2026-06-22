@@ -97,7 +97,6 @@ export class StatusSubscriberService implements OnModuleInit {
   }
 
   private async handleReady(asset: Asset, msg: TranscodeStatusMessage): Promise<void> {
-    // Update Asset
     await this.assets.update(asset.id, {
       status: AssetStatus.Ready,
       hlsMasterPath: msg.hlsMasterKey ?? null,
@@ -105,16 +104,13 @@ export class StatusSubscriberService implements OnModuleInit {
       statusMessage: null,
     });
 
-    // Back-fill Title.runtimeSeconds (resolves review item B5)
     const titleUpdate: Partial<Title> = {};
     if (msg.durationSeconds != null) {
       titleUpdate.runtimeSeconds = msg.durationSeconds;
     }
 
-    // Write poster URL if the worker extracted one (resolves review item B2).
-    // posterKey is stored as "hls/{assetId}/poster.jpg"; EDGE_BASE already
-    // includes "/hls" (e.g. "http://localhost:8080/hls"), so we strip the
-    // leading "hls/" from the key to avoid a double-hls URL.
+    // posterKey is "hls/{assetId}/poster.jpg"; EDGE_BASE already includes "/hls",
+    // so we strip the leading "hls/" to avoid a double-hls URL.
     if (msg.posterKey) {
       const edgeBase = (process.env.EDGE_BASE ?? 'http://localhost:8080/hls').replace(/\/$/, '');
       const relPath = msg.posterKey.startsWith('hls/')

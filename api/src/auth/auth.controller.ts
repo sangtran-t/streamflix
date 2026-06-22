@@ -67,10 +67,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     const raw: unknown = (req.cookies as Record<string, unknown>)[COOKIE_NAME];
     if (typeof raw === 'string' && raw) {
       await this.auth.logout(raw);

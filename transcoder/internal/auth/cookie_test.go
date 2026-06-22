@@ -20,9 +20,9 @@ const (
 	goldenSecret  = "test-secret"
 	goldenUserId  = "11111111-1111-1111-1111-111111111111"
 	goldenAssetId = "22222222-2222-2222-2222-222222222222"
-	goldenExpiry  = int64(1750000000)
-	goldenPayload = "eyJ1IjoiMTExMTExMTEtMTExMS0xMTExLTExMTEtMTExMTExMTExMTExIiwiYSI6IjIyMjIyMjIyLTIyMjItMjIyMi0yMjIyLTIyMjIyMjIyMjIyMiIsImUiOjE3NTAwMDAwMDB9"
-	goldenSig     = "VEoV18jR3Wv7HJKbaInMAImlKXQhoLuHyjgT3wlcSI0"
+	goldenExpiry  = int64(3000000000)
+	goldenPayload = "eyJ1IjoiMTExMTExMTEtMTExMS0xMTExLTExMTEtMTExMTExMTExMTExIiwiYSI6IjIyMjIyMjIyLTIyMjItMjIyMi0yMjIyLTIyMjIyMjIyMjIyMiIsImUiOjMwMDAwMDAwMDB9"
+	goldenSig     = "JcJfV7BaSYGI-j-0z-wN_C21iaVq6dp2layBkmzrGLQ"
 )
 
 // goldenCookie is the full cookie value for the golden vector.

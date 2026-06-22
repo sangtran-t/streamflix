@@ -13,8 +13,7 @@ import { SIGNING_SECRET, SigningService } from './signing.service';
   providers: [
     {
       provide: SIGNING_SECRET,
-      useFactory: (): string =>
-        process.env['SIGNING_SECRET'] ?? 'dev-signing-secret-change-me',
+      useFactory: (): string => process.env['SIGNING_SECRET'] ?? 'dev-signing-secret-change-me',
     },
     SigningService,
     PlaybackService,

@@ -27,7 +27,12 @@ export class Asset {
   sourceUrl!: string | null;
 
   @Index('asset_status_idx')
-  @Column({ type: 'enum', enum: AssetStatus, enumName: 'asset_status_enum', default: AssetStatus.Queued })
+  @Column({
+    type: 'enum',
+    enum: AssetStatus,
+    enumName: 'asset_status_enum',
+    default: AssetStatus.Queued,
+  })
   status!: AssetStatus;
 
   @Column({ name: 'status_message', type: 'text', nullable: true })
