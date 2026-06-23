@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthResult, AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -18,6 +19,7 @@ const COOKIE_NAME = 'sf_refresh';
 const COOKIE_OPTS = {
   httpOnly: true,
   sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
   path: '/api/v1/auth',
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
 };
@@ -27,6 +29,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 10, ttl: 900000 } }) // 10 attempts per 15 minutes
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
@@ -39,6 +42,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 900000 } }) // 10 attempts per 15 minutes
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "Video streaming platform",
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26",
   "engines": {
     "node": ">=22"
   },
@@ -19,6 +19,11 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.8.4"
+  },
+  "resolutions": {
+    "js-yaml": "^4.2.0",
+    "multer": "^2.2.0",
+    "protobufjs": "^7.6.3"
   }
 }
