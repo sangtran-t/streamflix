@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Nav } from './components/ui/Nav.tsx';
 import { trySilentRefresh, useAuth } from './hooks/useAuth.ts';
-import { UploadQueueProvider } from './hooks/useUploadQueue.tsx';
+import { UploadQueueProvider } from './components/providers/UploadQueueProvider.tsx';
 import Browse from './pages/Browse.tsx';
 import Home from './pages/Home.tsx';
 import Login from './pages/Login.tsx';

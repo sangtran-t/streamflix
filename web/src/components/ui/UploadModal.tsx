@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useUploadQueue } from '../../hooks/useUploadQueue';
+import { useUploadQueue } from '../../contexts/UploadQueueContext.ts';
 import { useAuth } from '../../hooks/useAuth';
 import { Icon } from './Icon';
 
@@ -128,12 +128,12 @@ export function UploadModal({ onClose }: UploadModalProps) {
             transition: 'background 0.2s, color 0.2s',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text)';
+            (e.currentTarget).style.background = 'rgba(255,255,255,0.1)';
+            (e.currentTarget).style.color = 'var(--text)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-faint)';
+            (e.currentTarget).style.background = 'rgba(255,255,255,0.05)';
+            (e.currentTarget).style.color = 'var(--text-faint)';
           }}
         >
           <Icon name="close" size={16} />
@@ -191,13 +191,13 @@ export function UploadModal({ onClose }: UploadModalProps) {
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Big Buck Bunny"
                   onFocus={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = 'var(--accent-line)';
-                    (e.target as HTMLInputElement).style.boxShadow =
+                    (e.target).style.borderColor = 'var(--accent-line)';
+                    (e.target).style.boxShadow =
                       '0 0 0 3px var(--accent-soft)';
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = 'var(--hairline)';
-                    (e.target as HTMLInputElement).style.boxShadow = 'none';
+                    (e.target).style.borderColor = 'var(--hairline)';
+                    (e.target).style.boxShadow = 'none';
                   }}
                 />
               </label>
@@ -219,13 +219,13 @@ export function UploadModal({ onClose }: UploadModalProps) {
                   onChange={(e) => setForm((f) => ({ ...f, synopsis: e.target.value }))}
                   placeholder="Short description of the title"
                   onFocus={(e) => {
-                    (e.target as HTMLTextAreaElement).style.borderColor = 'var(--accent-line)';
-                    (e.target as HTMLTextAreaElement).style.boxShadow =
+                    (e.target).style.borderColor = 'var(--accent-line)';
+                    (e.target).style.boxShadow =
                       '0 0 0 3px var(--accent-soft)';
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLTextAreaElement).style.borderColor = 'var(--hairline)';
-                    (e.target as HTMLTextAreaElement).style.boxShadow = 'none';
+                    (e.target).style.borderColor = 'var(--hairline)';
+                    (e.target).style.boxShadow = 'none';
                   }}
                 />
               </label>
@@ -242,13 +242,13 @@ export function UploadModal({ onClose }: UploadModalProps) {
                   value={form.year}
                   onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
                   onFocus={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = 'var(--accent-line)';
-                    (e.target as HTMLInputElement).style.boxShadow =
+                    (e.target).style.borderColor = 'var(--accent-line)';
+                    (e.target).style.boxShadow =
                       '0 0 0 3px var(--accent-soft)';
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = 'var(--hairline)';
-                    (e.target as HTMLInputElement).style.boxShadow = 'none';
+                    (e.target).style.borderColor = 'var(--hairline)';
+                    (e.target).style.boxShadow = 'none';
                   }}
                 />
               </label>

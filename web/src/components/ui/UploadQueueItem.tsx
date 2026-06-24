@@ -10,7 +10,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { type QueueItem, type UploadPhase } from '../../hooks/useUploadQueue';
+import { type QueueItem, type UploadPhase } from '../../contexts/UploadQueueContext.ts';
 import { Icon } from './Icon';
 
 // ─── Format Utils ─────────────────────────────────────────────────────────────
@@ -366,7 +366,16 @@ function HorizontalTimeline({
   );
 }
 
-function TimelineStep({ label, isActive, isDone, isError, pulse, pct }: any) {
+interface TimelineStepProps {
+  label: string;
+  isActive: boolean;
+  isDone: boolean;
+  isError?: boolean;
+  pulse?: boolean;
+  pct?: number;
+}
+
+function TimelineStep({ label, isActive, isDone, isError, pulse, pct }: TimelineStepProps) {
   const color = isError ? '#e07070' : isDone ? '#7dcea0' : isActive ? 'var(--accent)' : 'var(--text-faint)';
   
   return (

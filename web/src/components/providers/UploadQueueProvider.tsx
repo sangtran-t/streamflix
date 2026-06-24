@@ -8,9 +8,7 @@
  */
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useReducer,
   useRef,
@@ -22,29 +20,15 @@ import {
   initUpload,
   putFileToStorage,
   type AssetStatus,
-} from '../api/upload';
+} from '../../api/upload';
+
+import {
+  UploadQueueContext,
+  type QueueItem,
+  type UploadPhase,
+} from '../../contexts/UploadQueueContext.ts';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-
-export type UploadPhase = 'queued' | 'uploading' | 'processing' | 'done' | 'error';
-
-export interface QueueItem {
-  id: string;
-  name: string;
-  synopsis: string;
-  year: number;
-  filename: string;
-  contentType: string;
-  /** File object — only available in the current session (not persisted) */
-  file?: File;
-  phase: UploadPhase;
-  uploadPct: number;
-  assetId?: string;
-  transcodeStatus?: AssetStatus;
-  error?: string;
-  addedAt: number; // timestamp ms
-  finishedAt?: number; // timestamp ms when done or error
-}
 
 type Action =
   | { type: 'ADD'; item: QueueItem }
@@ -128,7 +112,7 @@ function loadFromStorage(): QueueItem[] {
     // Items that were mid-upload when the page was closed → mark as error
     return parsed.map((it) =>
       it.phase === 'uploading' || it.phase === 'queued'
-        ? { ...it, phase: 'error' as UploadPhase, error: 'Upload interrupted — please retry.' }
+        ? { ...it, phase: 'error', error: 'Upload interrupted — please retry.' }
         : it,
     );
   } catch {
@@ -145,23 +129,6 @@ function saveToStorage(items: QueueItem[]) {
     // Storage quota exceeded — silently ignore
   }
 }
-
-// ─── Context ──────────────────────────────────────────────────────────────────
-
-interface UploadQueueContextValue {
-  items: QueueItem[];
-  /** Number of items actively in-flight (uploading or processing) */
-  activeCount: number;
-  enqueue: (
-    fields: { name: string; synopsis: string; year: number; file: File },
-    accessToken: string,
-  ) => string;
-  remove: (id: string) => void;
-  retry: (id: string, accessToken: string) => void;
-  resumePolling: (accessToken: string) => void;
-}
-
-const UploadQueueContext = createContext<UploadQueueContextValue | null>(null);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -186,8 +153,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
   // ── Cleanup all polls on unmount ──────────────────────────────────────────
   useEffect(() => {
+    const refs = pollRefs.current;
     return () => {
-      Object.values(pollRefs.current).forEach(clearInterval);
+      Object.values(refs).forEach(clearInterval);
     };
   }, []);
 
@@ -345,10 +313,4 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useUploadQueue(): UploadQueueContextValue {
-  const ctx = useContext(UploadQueueContext);
-  if (!ctx) throw new Error('useUploadQueue must be used within UploadQueueProvider');
-  return ctx;
-}

@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useUploadQueue } from '../hooks/useUploadQueue';
+import { useUploadQueue } from '../contexts/UploadQueueContext.ts';
 import { Icon } from '../components/ui/Icon.tsx';
 import { UploadQueueItem } from '../components/ui/UploadQueueItem.tsx';
 import { UploadModal } from '../components/ui/UploadModal.tsx';

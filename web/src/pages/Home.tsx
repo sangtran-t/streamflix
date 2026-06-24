@@ -6,7 +6,8 @@ import { Icon } from '../components/ui/Icon.tsx';
 import { Reveal } from '../components/ui/Reveal.tsx';
 import { Still } from '../components/ui/Still.tsx';
 import { trySilentRefresh, useAuth } from '../hooks/useAuth.ts';
-import { FilmCard, backdropImage } from '../components/ui/FilmCard.tsx';
+import { FilmCard } from '../components/ui/FilmCard.tsx';
+import { backdropImage } from '../utils/image.ts';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

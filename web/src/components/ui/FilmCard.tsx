@@ -2,14 +2,9 @@ import { Link } from 'react-router-dom';
 import { type TitleSummary } from '../../api/catalog.ts';
 import { Icon } from './Icon.tsx';
 import { Still } from './Still.tsx';
+import { backdropImage, coverImage } from '../../utils/image.ts';
 
-export function coverImage(t: TitleSummary): string | null {
-  return t.posterImageUrl ?? t.heroImageUrl;
-}
 
-export function backdropImage(t: TitleSummary): string | null {
-  return t.heroImageUrl ?? t.posterImageUrl;
-}
 
 export function FilmCard({ title, tall = false }: { title: TitleSummary; tall?: boolean }) {
   return (
@@ -20,7 +15,7 @@ export function FilmCard({ title, tall = false }: { title: TitleSummary; tall?: 
             imageUrl={tall ? coverImage(title) : backdropImage(title)}
             style={{ position: 'absolute', inset: 0 }}
           />
-          
+
           {/* Top Right Year Tag */}
           {title.year && <div className="glass-pill">{title.year}</div>}
 
@@ -51,7 +46,7 @@ export function FilmCard({ title, tall = false }: { title: TitleSummary; tall?: 
               gap: tall ? 0 : 12,
             }}
           >
-            <div 
+            <div
               className="title-scroll-container"
               style={{ flex: 1 }}
               onMouseEnter={(e) => {
@@ -70,28 +65,28 @@ export function FilmCard({ title, tall = false }: { title: TitleSummary; tall?: 
                 }
               }}
             >
-              <h3 
-                className="card-title title-scroll-text" 
-                style={{ 
-                  color: 'var(--text)', 
-                  marginBottom: (tall && title.genres && title.genres.length > 0) ? 4 : 0,
+              <h3
+                className="card-title title-scroll-text"
+                style={{
+                  color: 'var(--text)',
+                  marginBottom: tall && title.genres && title.genres.length > 0 ? 4 : 0,
                   WebkitLineClamp: 'unset', // Override the 2-line clamp to allow scrolling
                 }}
               >
                 {title.name}
               </h3>
             </div>
-            
+
             {title.genres && title.genres.length > 0 && (
-              <p 
-                className="kicker" 
-                style={{ 
-                  color: 'rgba(255,255,255,0.65)', 
-                  fontSize: 12, 
-                  letterSpacing: '0.02em', 
+              <p
+                className="kicker"
+                style={{
+                  color: 'rgba(255,255,255,0.65)',
+                  fontSize: 12,
+                  letterSpacing: '0.02em',
                   margin: 0,
                   whiteSpace: 'nowrap',
-                  flexShrink: 0
+                  flexShrink: 0,
                 }}
               >
                 {title.genres.slice(0, 2).join(' · ')}

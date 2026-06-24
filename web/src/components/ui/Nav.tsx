@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon.tsx';
 import { useAuth } from '../../hooks/useAuth.ts';
-import { useUploadQueue } from '../../hooks/useUploadQueue.tsx';
+import { useUploadQueue } from '../../contexts/UploadQueueContext.ts';
 import { Wordmark } from './Wordmark.tsx';
 
 interface NavProps {
