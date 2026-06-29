@@ -4,8 +4,6 @@ import { Icon } from './Icon.tsx';
 import { Still } from './Still.tsx';
 import { backdropImage, coverImage } from '../../utils/image.ts';
 
-
-
 export function FilmCard({ title, tall = false }: { title: TitleSummary; tall?: boolean }) {
   return (
     <Link to={`/title/${title.slug}`} className="film-card">

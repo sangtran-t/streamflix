@@ -24,13 +24,13 @@ docker compose up proxy api edge worker web
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm migrate` | Run database migrations |
-| `pnpm seed` | Seed database with initial data |
-| `pnpm lint` | Run linter across all packages |
-| `pnpm test` | Run tests across all packages |
-| `pnpm build` | Build all packages |
+| Command        | Description                     |
+| -------------- | ------------------------------- |
+| `pnpm migrate` | Run database migrations         |
+| `pnpm seed`    | Seed database with initial data |
+| `pnpm lint`    | Run linter across all packages  |
+| `pnpm test`    | Run tests across all packages   |
+| `pnpm build`   | Build all packages              |
 
 ## Architecture
 
@@ -42,7 +42,7 @@ The system utilizes a polyglot microservices architecture designed for performan
 - **Delivery Edge**: Latency-sensitive Go service that verifies signed URLs and serves HLS segments rapidly.
 - **Infrastructure**: PostgreSQL for relational data, Temporal for workflow orchestration, Redis for pub/sub status updates & caching, and MinIO for S3-compatible object storage.
 
-**System Architecture & Data Flow**: 
+**System Architecture & Data Flow**:
 
 ```text
 [ Web Client ]
@@ -58,12 +58,12 @@ The system utilizes a polyglot microservices architecture designed for performan
        │                                  ▲                  │
        │                                  │   (Pub/Sub)      │
        │                                  └─── (Redis) ◀─────┘
-       │                                                   
+       │
        └── (2) Stream Video ◀── [ CDN ] ◀── [ Go Edge ] ◀── (MinIO Storage)
                                              (HLS Server)    (Video Segments)
 ```
 
-*For detailed architectural decisions, please refer to our [Architecture Decision Records (ADRs)](docs/adr/).*
+_For detailed architectural decisions, please refer to our [Architecture Decision Records (ADRs)](docs/adr/)._
 
 ## Implementation Status
 

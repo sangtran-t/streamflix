@@ -11,10 +11,10 @@ export function UpcomingFeature({ title, description, iconName = 'info' }: Upcom
   return (
     <div
       className="screen-anim"
-      style={{ 
-        display: 'flex', 
+      style={{
+        display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center', 
+        alignItems: 'center',
         justifyContent: 'center',
         minHeight: '70vh',
         textAlign: 'center',
@@ -24,7 +24,7 @@ export function UpcomingFeature({ title, description, iconName = 'info' }: Upcom
       }}
     >
       {/* Ambient Branded Stage Glow */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           top: '50%',
@@ -45,7 +45,7 @@ export function UpcomingFeature({ title, description, iconName = 'info' }: Upcom
       {/* Hero Icon Container with Glass & Mechanical Ring */}
       <div style={{ position: 'relative', marginBottom: 48 }}>
         {/* Outer rotating dashed ring for creative/building flair */}
-        <div 
+        <div
           style={{
             position: 'absolute',
             inset: -14,
@@ -66,9 +66,9 @@ export function UpcomingFeature({ title, description, iconName = 'info' }: Upcom
             100% { transform: translateY(0); }
           }
         `}</style>
-        
+
         {/* Inner Glass Icon */}
-        <div 
+        <div
           style={{
             width: 104,
             height: 104,
@@ -87,44 +87,44 @@ export function UpcomingFeature({ title, description, iconName = 'info' }: Upcom
           <Icon name={iconName} size={46} style={{ color: 'var(--accent)' }} />
         </div>
       </div>
-      
+
       {/* Branded Typography */}
       <div style={{ position: 'relative', display: 'inline-block' }}>
-        <p 
-          className="kicker" 
-          style={{ 
-            color: 'var(--accent)', 
-            marginBottom: 16, 
+        <p
+          className="kicker"
+          style={{
+            color: 'var(--accent)',
+            marginBottom: 16,
             letterSpacing: '0.25em',
             fontSize: 13,
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
           }}
         >
           Coming Soon
         </p>
-        <h1 
-          className="display" 
-          style={{ 
-            fontSize: 'clamp(36px, 5vw, 56px)', 
+        <h1
+          className="display"
+          style={{
+            fontSize: 'clamp(36px, 5vw, 56px)',
             marginBottom: 24,
             letterSpacing: '-0.02em',
             background: 'linear-gradient(180deg, #ffffff 20%, var(--accent) 150%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            textShadow: '0 20px 40px rgba(227, 189, 118, 0.15)'
+            textShadow: '0 20px 40px rgba(227, 189, 118, 0.15)',
           }}
         >
           {title}
         </h1>
       </div>
-      
-      <p 
-        style={{ 
-          color: 'var(--text-dim)', 
-          fontSize: 'clamp(16px, 1.5vw, 18px)', 
-          maxWidth: 520, 
+
+      <p
+        style={{
+          color: 'var(--text-dim)',
+          fontSize: 'clamp(16px, 1.5vw, 18px)',
+          maxWidth: 520,
           lineHeight: 1.65,
-          fontWeight: 400
+          fontWeight: 400,
         }}
       >
         {description}

@@ -62,7 +62,7 @@ function EmptyQueue({ onAddClick }: { onAddClick: () => void }) {
       <p style={{ fontSize: 14, color: 'var(--text-faint)', lineHeight: 1.5, maxWidth: 280 }}>
         Ready to stream? Add a new video file to start the transcoding process.
       </p>
-      
+
       <button
         onClick={onAddClick}
         className="btn btn--play"
@@ -107,13 +107,14 @@ export default function Upload() {
   // Filtering & Pagination
   const filteredItems = useMemo(() => {
     if (statusFilter === 'all') return items;
-    if (statusFilter === 'active') return items.filter((it) => it.phase === 'uploading' || it.phase === 'processing');
+    if (statusFilter === 'active')
+      return items.filter((it) => it.phase === 'uploading' || it.phase === 'processing');
     return items.filter((it) => it.phase === statusFilter);
   }, [items, statusFilter]);
 
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE);
-  
+
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredItems.slice(start, start + PAGE_SIZE);
@@ -145,12 +146,24 @@ export default function Upload() {
             <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
             Upload
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 20,
+            }}
+          >
             <div style={{ flex: 1, minWidth: 300 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <h1
                   className="display display--xl"
-                  style={{ fontSize: 'clamp(28px,4vw,42px)', textTransform: 'uppercase', lineHeight: 1 }}
+                  style={{
+                    fontSize: 'clamp(28px,4vw,42px)',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
+                  }}
                 >
                   Upload Dashboard
                 </h1>
@@ -186,7 +199,9 @@ export default function Upload() {
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: 14, color: 'var(--text-faint)', marginTop: 12, lineHeight: 1.5 }}>
+              <p
+                style={{ fontSize: 14, color: 'var(--text-faint)', marginTop: 12, lineHeight: 1.5 }}
+              >
                 Add videos to the queue — they upload and transcode in the background.
                 <br />
                 You can navigate away and return to check progress anytime.
@@ -246,12 +261,23 @@ export default function Upload() {
               {/* Stats bar & Add button */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 {items.length > 0 && (
-                  <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 12, border: '1px solid var(--hairline)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 4,
+                      background: 'rgba(255,255,255,0.03)',
+                      padding: 4,
+                      borderRadius: 12,
+                      border: '1px solid var(--hairline)',
+                    }}
+                  >
                     {[
                       { id: 'all', count: items.length, label: 'All', color: 'var(--text)' },
                       {
                         id: 'active',
-                        count: items.filter((it) => it.phase === 'uploading' || it.phase === 'processing').length,
+                        count: items.filter(
+                          (it) => it.phase === 'uploading' || it.phase === 'processing',
+                        ).length,
                         label: 'Active',
                         color: 'var(--accent)',
                       },
@@ -312,7 +338,7 @@ export default function Upload() {
                     })}
                   </div>
                 )}
-                
+
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="btn btn--play"
@@ -369,17 +395,33 @@ export default function Upload() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '0 8px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: 16,
+                  padding: '0 8px',
+                }}
+              >
                 <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>
-                  Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, filteredItems.length)} of {filteredItems.length}
+                  Showing {(currentPage - 1) * PAGE_SIZE + 1} to{' '}
+                  {Math.min(currentPage * PAGE_SIZE, filteredItems.length)} of{' '}
+                  {filteredItems.length}
                 </span>
-                
+
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="btn btn--ghost"
-                    style={{ height: 32, padding: '0 12px', fontSize: 13, borderRadius: 8, opacity: currentPage === 1 ? 0.3 : 1 }}
+                    style={{
+                      height: 32,
+                      padding: '0 12px',
+                      fontSize: 13,
+                      borderRadius: 8,
+                      opacity: currentPage === 1 ? 0.3 : 1,
+                    }}
                   >
                     Previous
                   </button>
@@ -387,7 +429,13 @@ export default function Upload() {
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="btn btn--ghost"
-                    style={{ height: 32, padding: '0 12px', fontSize: 13, borderRadius: 8, opacity: currentPage === totalPages ? 0.3 : 1 }}
+                    style={{
+                      height: 32,
+                      padding: '0 12px',
+                      fontSize: 13,
+                      borderRadius: 8,
+                      opacity: currentPage === totalPages ? 0.3 : 1,
+                    }}
                   >
                     Next
                   </button>

@@ -18,7 +18,7 @@ export async function register(
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     throw new Error(body.message ?? `Register failed: ${res.status}`);
   }
-  return await res.json();
+  return (await res.json()) as AuthResult;
 }
 
 export async function login(email: string, password: string): Promise<AuthResult> {
@@ -32,7 +32,7 @@ export async function login(email: string, password: string): Promise<AuthResult
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     throw new Error(body.message ?? `Login failed: ${res.status}`);
   }
-  return await res.json();
+  return (await res.json()) as AuthResult;
 }
 
 /** Exchange the httpOnly refresh cookie for a new access token. */
@@ -42,7 +42,7 @@ export async function refreshTokens(): Promise<AuthResult> {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Session expired — please log in again');
-  return await res.json();
+  return (await res.json()) as AuthResult;
 }
 
 export async function logout(): Promise<void> {

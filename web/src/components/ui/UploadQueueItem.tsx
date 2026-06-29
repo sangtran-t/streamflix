@@ -8,14 +8,18 @@
  * - error:      error message + Retry / Remove actions
  */
 
-
 import { useEffect, useState } from 'react';
 import { type QueueItem, type UploadPhase } from '../../contexts/UploadQueueContext.ts';
 import { Icon } from './Icon';
 
 // ─── Format Utils ─────────────────────────────────────────────────────────────
 function formatTime(timestamp: number) {
-  return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true }).format(new Date(timestamp));
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true,
+  }).format(new Date(timestamp));
 }
 
 function formatDuration(ms: number) {
@@ -83,8 +87,6 @@ const phaseConfig: Record<
   },
 };
 
-
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
@@ -128,8 +130,6 @@ function PhaseBadge({ phase }: { phase: UploadPhase }) {
   );
 }
 
-
-
 // ─── Film icon placeholder ────────────────────────────────────────────────────
 
 function FilmThumb({ phase }: { phase: UploadPhase }) {
@@ -158,7 +158,6 @@ function FilmThumb({ phase }: { phase: UploadPhase }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function UploadQueueItem({ item, onRemove, onRetry }: Props) {
-
   const isActive = item.phase === 'uploading' || item.phase === 'processing';
   const isDismissable = item.phase === 'done' || item.phase === 'error';
 
@@ -243,33 +242,51 @@ export function UploadQueueItem({ item, onRemove, onRetry }: Props) {
             marginBottom: 12,
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {item.filename}
-            {item.file && <span style={{ color: 'var(--text-ghost)' }}>· {formatBytes(item.file.size)}</span>}
+            {item.file && (
+              <span style={{ color: 'var(--text-ghost)' }}>· {formatBytes(item.file.size)}</span>
+            )}
           </span>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-ghost)' }}>
+
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-ghost)' }}
+          >
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }} title="Started at">
               <Icon name="clock" size={12} /> {formatTime(item.addedAt)}
             </span>
             {item.finishedAt && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }} title="Finished at">
-                <Icon name={item.phase === 'error' ? 'close' : 'check'} size={12} /> {formatTime(item.finishedAt)}
+                <Icon name={item.phase === 'error' ? 'close' : 'check'} size={12} />{' '}
+                {formatTime(item.finishedAt)}
               </span>
             )}
             {isActive && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)' }} title="Duration">
-                <Icon name="info" size={11} /> <LiveDuration start={item.addedAt} end={item.finishedAt} />
+              <span
+                style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)' }}
+                title="Duration"
+              >
+                <Icon name="info" size={11} />{' '}
+                <LiveDuration start={item.addedAt} end={item.finishedAt} />
               </span>
             )}
           </div>
         </div>
 
         {/* Phase-specific Horizontal Timeline */}
-        <HorizontalTimeline 
-          phase={item.phase} 
-          uploadPct={item.uploadPct} 
-          error={item.error} 
+        <HorizontalTimeline
+          phase={item.phase}
+          uploadPct={item.uploadPct}
+          error={item.error}
           transcodeStatus={item.transcodeStatus}
         />
       </div>
@@ -309,14 +326,14 @@ export function UploadQueueItem({ item, onRemove, onRetry }: Props) {
 
 // ─── Horizontal Timeline ────────────────────────────────────────────────────────
 
-function HorizontalTimeline({ 
-  phase, 
-  uploadPct, 
+function HorizontalTimeline({
+  phase,
+  uploadPct,
   error,
-  transcodeStatus
-}: { 
-  phase: UploadPhase; 
-  uploadPct: number; 
+  transcodeStatus,
+}: {
+  phase: UploadPhase;
+  uploadPct: number;
   error?: string;
   transcodeStatus?: string;
 }) {
@@ -332,36 +349,34 @@ function HorizontalTimeline({
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: 20, width: '100%' }}>
-      <TimelineStep 
-        label="Queued" 
-        isActive={isQueued} 
-        isDone={!isQueued} 
-      />
+      <TimelineStep label="Queued" isActive={isQueued} isDone={!isQueued} />
       <TimelineLine isDone={!isQueued && !failedAtUpload} />
-      
-      <TimelineStep 
-        label={failedAtUpload ? (error || 'Upload Failed') : isUploading ? `Uploading ${uploadPct}%` : 'Uploaded'} 
-        isActive={isUploading || failedAtUpload} 
-        isDone={isProcessing || isDone || failedAtTranscode} 
+
+      <TimelineStep
+        label={
+          failedAtUpload
+            ? error || 'Upload Failed'
+            : isUploading
+              ? `Uploading ${uploadPct}%`
+              : 'Uploaded'
+        }
+        isActive={isUploading || failedAtUpload}
+        isDone={isProcessing || isDone || failedAtTranscode}
         isError={failedAtUpload}
         pct={isUploading ? uploadPct : undefined}
       />
       <TimelineLine isDone={isProcessing || isDone || failedAtTranscode} />
-      
-      <TimelineStep 
-        label={failedAtTranscode ? (error || 'Transcode Failed') : "Transcoding"} 
-        isActive={isProcessing || failedAtTranscode} 
-        isDone={isDone} 
+
+      <TimelineStep
+        label={failedAtTranscode ? error || 'Transcode Failed' : 'Transcoding'}
+        isActive={isProcessing || failedAtTranscode}
+        isDone={isDone}
         isError={failedAtTranscode}
         pulse={isProcessing}
       />
       <TimelineLine isDone={isDone} />
-      
-      <TimelineStep 
-        label={isDone ? 'Ready' : 'Pending'} 
-        isActive={isDone} 
-        isDone={isDone} 
-      />
+
+      <TimelineStep label={isDone ? 'Ready' : 'Pending'} isActive={isDone} isDone={isDone} />
     </div>
   );
 }
@@ -376,8 +391,14 @@ interface TimelineStepProps {
 }
 
 function TimelineStep({ label, isActive, isDone, isError, pulse, pct }: TimelineStepProps) {
-  const color = isError ? '#e07070' : isDone ? '#7dcea0' : isActive ? 'var(--accent)' : 'var(--text-faint)';
-  
+  const color = isError
+    ? '#e07070'
+    : isDone
+      ? '#7dcea0'
+      : isActive
+        ? 'var(--accent)'
+        : 'var(--text-faint)';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -413,11 +434,29 @@ function TimelineStep({ label, isActive, isDone, isError, pulse, pct }: Timeline
           {label}
         </span>
       </div>
-      
+
       {/* Mini Progress Bar for active step */}
       {pct !== undefined && isActive && (
-        <div style={{ position: 'absolute', top: 22, left: 22, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: color, transition: 'width 0.2s ease-out' }} />
+        <div
+          style={{
+            position: 'absolute',
+            top: 22,
+            left: 22,
+            right: 0,
+            height: 3,
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: color,
+              transition: 'width 0.2s ease-out',
+            }}
+          />
         </div>
       )}
     </div>
@@ -426,15 +465,17 @@ function TimelineStep({ label, isActive, isDone, isError, pulse, pct }: Timeline
 
 function TimelineLine({ isDone }: { isDone: boolean }) {
   return (
-    <div style={{ 
-      flex: 1, 
-      minWidth: 16,
-      height: 2, 
-      background: isDone ? '#7dcea0' : 'rgba(255,255,255,0.08)', 
-      margin: '0 12px',
-      marginTop: 6, // Aligns with the 14px circle (14/2 - 2/2 = 6)
-      borderRadius: 2,
-      transition: 'background 0.3s'
-    }} />
+    <div
+      style={{
+        flex: 1,
+        minWidth: 16,
+        height: 2,
+        background: isDone ? '#7dcea0' : 'rgba(255,255,255,0.08)',
+        margin: '0 12px',
+        marginTop: 6, // Aligns with the 14px circle (14/2 - 2/2 = 6)
+        borderRadius: 2,
+        transition: 'background 0.3s',
+      }}
+    />
   );
 }

@@ -26,10 +26,12 @@ import { UploadModule } from './upload/upload.module';
     PlaybackModule,
     UploadModule,
     ProgressModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
   ],
   providers: [
     {

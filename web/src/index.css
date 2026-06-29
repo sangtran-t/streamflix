@@ -489,18 +489,34 @@ img {
    Upload dashboard animations
    ============================================================ */
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.75); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
 }
 
 @keyframes pulse-badge {
-  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); }
-  50% { box-shadow: 0 0 0 4px transparent; }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-soft);
+  }
+  50% {
+    box-shadow: 0 0 0 4px transparent;
+  }
 }
 
 /* ============================================================
@@ -537,12 +553,18 @@ img {
   border-radius: 20px;
   -webkit-mask-image: -webkit-radial-gradient(white, black);
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 30px -10px rgba(0,0,0,0.6);
-  transition: box-shadow 0.5s var(--ease), transform 0.5s var(--ease);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  transition:
+    box-shadow 0.5s var(--ease),
+    transform 0.5s var(--ease);
 }
 .film-card:hover .film-card-media,
 .film-card:focus-visible .film-card-media {
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), 0 20px 40px -10px rgba(0,0,0,0.8);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 20px 40px -10px rgba(0, 0, 0, 0.8);
   transform: translateY(-4px);
 }
 .film-card-media img {
@@ -636,8 +658,14 @@ img {
 }
 
 @keyframes marquee-infinite {
-  0%, 15% { transform: translateX(0); }
-  85%, 100% { transform: translateX(var(--scroll-dist, -50px)); }
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  85%,
+  100% {
+    transform: translateX(var(--scroll-dist, -50px));
+  }
 }
 
 /* The Index Grid Layout (Responsive) */
@@ -649,7 +677,7 @@ img {
 }
 @media (min-width: 1024px) {
   .the-index-grid {
-    grid-template-columns: minmax(0,1.4fr) minmax(0,0.6fr);
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
   }
 }
 

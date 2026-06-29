@@ -7,13 +7,7 @@
  * queue survives hard refreshes for completed/processing items.
  */
 
-import {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useReducer, useRef, type ReactNode } from 'react';
 import {
   completeUpload,
   getUploadStatus,
@@ -237,10 +231,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // ── Public API ────────────────────────────────────────────────────────────
 
   const enqueue = useCallback(
-    (
-      fields: { name: string; synopsis: string; year: number; file: File },
-      accessToken: string,
-    ) => {
+    (fields: { name: string; synopsis: string; year: number; file: File }, accessToken: string) => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const item: QueueItem = {
         id,
@@ -290,9 +281,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
   const resumePolling = useCallback(
     (accessToken: string) => {
-      const processingItems = state.items.filter(
-        (i) => i.phase === 'processing' && i.assetId,
-      );
+      const processingItems = state.items.filter((i) => i.phase === 'processing' && i.assetId);
       processingItems.forEach((i) => {
         if (!pollRefs.current[i.id]) {
           startPolling(i.id, i.assetId!, accessToken);
@@ -307,10 +296,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   ).length;
 
   return (
-    <UploadQueueContext.Provider value={{ items: state.items, activeCount, enqueue, remove, retry, resumePolling }}>
+    <UploadQueueContext.Provider
+      value={{ items: state.items, activeCount, enqueue, remove, retry, resumePolling }}
+    >
       {children}
     </UploadQueueContext.Provider>
   );
 }
-
-

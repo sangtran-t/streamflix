@@ -10,6 +10,20 @@ permissions:
   contents: read
 
 jobs:
+  format:
+    name: code format (Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install
+      - run: pnpm format:check
+
   api:
     name: api (NestJS)
     runs-on: ubuntu-latest
@@ -17,11 +31,11 @@ jobs:
       run:
         working-directory: api
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       # Switch to `--frozen-lockfile` once pnpm-lock.yaml is committed (see
@@ -29,6 +43,7 @@ jobs:
       - run: pnpm install
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm build
       - run: pnpm test
       # Dependency audit (docs/CLAUDE.md §3). Non-blocking on low/moderate for now.
       - run: pnpm audit --audit-level high || true
@@ -40,15 +55,16 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm build
 
   go:
@@ -58,13 +74,19 @@ jobs:
       run:
         working-directory: transcoder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-          # Phase 0 is stdlib-only (no go.sum yet); module cache keys on go.sum
-          # are introduced when the first dependency is added in Phase 1.
-          cache: false
+          go-version: '1.25'
+          cache: true
+          cache-dependency-path: transcoder/go.sum
+      - name: Check formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go files are not formatted. Please run 'gofmt -w .'"
+            gofmt -l .
+            exit 1
+          fi
       - run: go vet ./...
       - run: go build ./...
       - run: go test ./...
@@ -73,7 +95,7 @@ jobs:
     name: docs guard (contract changes need docs)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Require COMMUNICATION.md update when contract code changes

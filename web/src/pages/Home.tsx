@@ -159,23 +159,23 @@ function Thread({ row }: { row: { title: string; items: TitleSummary[] } }) {
           </Link>
         </header>
       </Reveal>
-        <div
-          className="snap-x-mandatory no-scrollbar"
-          style={{
-            display: 'flex',
-            gap: 24,
-            padding: '24px 20px 40px',
-            margin: '-24px -20px 0',
-          }}
-        >
-          {row.items.map((t, i) => (
-            <div key={t.id} style={{ flex: '0 0 auto', width: 'clamp(280px, 25vw, 360px)' }}>
-              <Reveal delay={Math.min(i * 80, 400)}>
-                <FilmCard title={t} tall />
-              </Reveal>
-            </div>
-          ))}
-        </div>
+      <div
+        className="snap-x-mandatory no-scrollbar"
+        style={{
+          display: 'flex',
+          gap: 24,
+          padding: '24px 20px 40px',
+          margin: '-24px -20px 0',
+        }}
+      >
+        {row.items.map((t, i) => (
+          <div key={t.id} style={{ flex: '0 0 auto', width: 'clamp(280px, 25vw, 360px)' }}>
+            <Reveal delay={Math.min(i * 80, 400)}>
+              <FilmCard title={t} tall />
+            </Reveal>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

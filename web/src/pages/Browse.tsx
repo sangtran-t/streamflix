@@ -164,12 +164,22 @@ export default function Browse() {
 
             {filtered.length === 0 && selectedMoods.length > 0 ? (
               <p
-                style={{ fontSize: 'clamp(18px,2vw,24px)', color: 'var(--text-dim)', fontFamily: 'var(--sans)' }}
+                style={{
+                  fontSize: 'clamp(18px,2vw,24px)',
+                  color: 'var(--text-dim)',
+                  fontFamily: 'var(--sans)',
+                }}
               >
                 No films match {selectedMoods.join(' + ')}.
               </p>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '32px 24px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                  gap: '32px 24px',
+                }}
+              >
                 {filtered.map((t, i) => (
                   <Reveal key={t.id} delay={Math.min(i * 40, 400)}>
                     <FilmCard title={t} tall />

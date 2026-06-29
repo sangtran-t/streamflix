@@ -169,7 +169,9 @@ export function Nav({ userInitial }: NavProps) {
         })}
       </div>
 
-      <div style={{ justifySelf: 'end', minWidth: 72, display: 'flex', justifyContent: 'flex-end' }}>
+      <div
+        style={{ justifySelf: 'end', minWidth: 72, display: 'flex', justifyContent: 'flex-end' }}
+      >
         {userInitial !== null &&
           (userInitial ? (
             <div ref={menuRef} style={{ position: 'relative' }}>
